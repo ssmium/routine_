@@ -1,0 +1,3358 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, viewport-fit=cover" />
+<title>루틴보드</title>
+<meta name="theme-color" content="#FFFFFF" />
+<meta name="apple-mobile-web-app-capable" content="yes" />
+<meta name="apple-mobile-web-app-title" content="루틴보드" />
+<meta name="apple-mobile-web-app-status-bar-style" content="default" />
+<style>
+@font-face{
+  font-family:'Pretendard';
+  src:url('https://cdn.jsdelivr.net/gh/orioncactus/pretendard/dist/web/static/woff2/PretendardVariable.woff2') format('woff2');
+  font-weight:100 900;
+  font-display:swap;
+}
+
+:root{
+  --bg:#FFFFFF;
+  --card:#FFFFFF;
+  --ink:#191F28;
+  --sub:#6B7684;
+  --muted:#8B95A1;
+  --line:#ECEFF3;
+  --line2:#DDE3EA;
+  --green:#24C47A;
+  --green-dark:#12885B;
+  --green-soft:#E8F7F0;
+  --yellow:#F4C644;
+  --yellow-soft:#FFF6D6;
+  --purple:#E8D8F0;
+  --purple-deep:#51345F;
+  --lime:#DBEFB8;
+  --lime-deep:#486132;
+  --shadow:0 10px 30px rgba(0,0,0,.055);
+  --safe-bottom:env(safe-area-inset-bottom,0px);
+}
+
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent;}
+html,body{margin:0;padding:0;background:var(--bg);color:var(--ink);}
+body{
+  font-family:'Pretendard',-apple-system,BlinkMacSystemFont,system-ui,sans-serif;
+  min-height:100vh;
+  line-height:1.45;
+}
+button,input,textarea,select{font:inherit;}
+button{border:0;background:none;color:inherit;cursor:pointer;}
+::placeholder{color:#C2C9D2;}
+
+.app{
+  max-width:720px;
+  margin:0 auto;
+  min-height:100vh;
+  padding:0 18px 190px;
+}
+
+.header{
+  position:sticky;
+  top:0;
+  z-index:20;
+  padding:calc(16px + env(safe-area-inset-top,0px)) 0 14px;
+  background:rgba(255,255,255,.94);
+  backdrop-filter:blur(16px);
+  -webkit-backdrop-filter:blur(16px);
+  border-bottom:1px solid rgba(236,239,243,.78);
+}
+
+.topbar{
+  display:flex;
+  align-items:center;
+  justify-content:flex-start;
+}
+
+.month-btn{
+  display:flex;
+  align-items:center;
+  gap:7px;
+  padding:6px 2px;
+  font-size:24px;
+  font-weight:880;
+  letter-spacing:-.045em;
+}
+
+.month-btn .caret{
+  color:var(--sub);
+  font-size:15px;
+  margin-top:3px;
+}
+
+.week-strip{
+  margin-top:16px;
+  display:grid;
+  grid-template-columns:repeat(7,minmax(0,1fr));
+  gap:10px;
+}
+
+.day-col{
+  text-align:center;
+  min-width:0;
+}
+
+.weekday{
+  margin-bottom:8px;
+  font-size:14px;
+  font-weight:800;
+  color:#98A2AE;
+}
+
+.day-pill{
+  width:100%;
+  min-height:66px;
+  border-radius:24px;
+  display:flex;
+  justify-content:center;
+  align-items:center;
+  background:transparent;
+  position:relative;
+}
+
+.day-pill .num{
+  width:44px;
+  height:44px;
+  border-radius:999px;
+  display:grid;
+  place-items:center;
+  font-size:16px;
+  font-weight:800;
+  background:#F1F3F5;
+  color:#C1C7D0;
+}
+
+.day-pill.done .num{
+  background:#62CB7A;
+  color:#fff;
+}
+
+.day-pill.partial .num{
+  background:var(--yellow);
+  color:#fff;
+}
+
+.day-pill.low .num{
+  background:#F46A6A;
+  color:#fff;
+}
+
+.day-pill.selected{
+  background:#3F454B;
+  box-shadow:0 10px 22px rgba(30,35,40,.18);
+}
+
+.day-pill.selected .num{
+  color:#fff;
+}
+
+.day-pill.selected.done .num{
+  background:#62CB7A;
+  color:#fff;
+}
+
+.day-pill.selected.partial .num{
+  background:var(--yellow);
+  color:#fff;
+}
+
+.day-pill.selected.low .num{
+  background:#F46A6A;
+  color:#fff;
+}
+
+.day-pill.selected.has-board .num,
+.day-pill.selected.empty .num{
+  background:#B9BEC4;
+  color:#646B73;
+}
+
+.tabs-wrap{
+  margin-top:18px;
+  border-radius:30px 30px 22px 22px;
+  overflow:hidden;
+  background:#F4F5F6;
+  border:1px solid #EFF1F3;
+}
+
+.segment{
+  display:grid;
+  grid-template-columns:repeat(2, 1fr);
+}
+
+.segment-btn{
+  padding:19px 10px;
+  font-size:20px;
+  font-weight:850;
+  letter-spacing:-.035em;
+  color:#9BA4AE;
+  background:#F6F7F8;
+}
+
+.segment-btn.active{
+  background:#fff;
+  color:#234A35;
+}
+
+.segment-btn .count{
+  font-size:14px;
+  color:#A7B0BA;
+  margin-left:4px;
+}
+
+.toolbar{
+  padding:16px 16px 6px;
+}
+
+.chips{
+  display:flex;
+  gap:10px;
+  overflow:auto;
+  scrollbar-width:none;
+  padding-bottom:8px;
+}
+.chips::-webkit-scrollbar{display:none;}
+
+.chip{
+  height:42px;
+  padding:0 16px;
+  border-radius:999px;
+  background:#fff;
+  border:1px solid var(--line);
+  color:var(--sub);
+  font-size:15px;
+  font-weight:780;
+  display:inline-flex;
+  align-items:center;
+  gap:7px;
+  white-space:nowrap;
+  box-shadow:0 4px 10px rgba(0,0,0,.025);
+}
+
+.chip.active{
+  background:#4D5359;
+  color:#fff;
+  border-color:#4D5359;
+}
+
+.chip.view-toggle{
+  min-width:48px;
+  padding:0;
+  justify-content:center;
+}
+
+.board{
+  padding:6px 16px 18px;
+}
+
+.group{
+  margin-top:12px;
+  display:block;
+}
+
+.group-left{
+  display:none;
+}
+
+.collapse{
+  width:24px;
+  height:24px;
+  display:grid;
+  place-items:center;
+  border-radius:8px;
+  color:#70757C;
+  background:#fff;
+  border:1px solid var(--line);
+}
+
+.order{
+  width:24px;
+  height:24px;
+  display:grid;
+  place-items:center;
+}
+
+.order.current{
+  color:#1E7B54;
+  font-weight:900;
+}
+
+.group-card{
+  background:#fff;
+  border:1px solid var(--line2);
+  border-radius:20px;
+  overflow:hidden;
+  box-shadow:var(--shadow);
+}
+
+.group-head{
+  display:grid;
+  grid-template-columns:42px 116px 1fr 66px;
+  min-height:74px;
+  border-bottom:1px solid var(--line2);
+}
+
+.group-head>div{
+  padding:14px 12px;
+  display:flex;
+  align-items:center;
+  min-width:0;
+  font-size:15px;
+  font-weight:850;
+  letter-spacing:-.02em;
+}
+
+.group-head .label,
+.group-head .title{
+  background:#EEF1BF;
+  color:#38452A;
+}
+
+.group-head .title{
+  border-left:1px solid rgba(0,0,0,.06);
+  white-space:nowrap;
+  overflow:hidden;
+  text-overflow:ellipsis;
+}
+
+.group-head .score{
+  justify-content:center;
+  flex-direction:column;
+  text-align:center;
+  gap:3px;
+  background:#F4E893;
+  border-left:1px solid rgba(0,0,0,.06);
+}
+
+.group-card.purple .group-head .label,
+.group-card.purple .group-head .title{
+  background:var(--purple);
+  color:var(--purple-deep);
+}
+.group-card.purple .group-head .score{
+  background:#DEC7EA;
+  color:var(--purple-deep);
+}
+.group-card.lime .group-head .label,
+.group-card.lime .group-head .title{
+  background:var(--lime);
+  color:var(--lime-deep);
+}
+.group-card.lime .group-head .score{
+  background:#CDE4A2;
+  color:var(--lime-deep);
+}
+
+.group-head .order-col{
+  background:#EEF1BF;
+  border-right:1px solid rgba(0,0,0,.06);
+}
+
+.group-card.purple .group-head .order-col{
+  background:var(--purple);
+}
+
+.group-card.lime .group-head .order-col{
+  background:var(--lime);
+}
+
+.item-row{
+  display:grid;
+  grid-template-columns:42px 116px 1fr 66px;
+  min-height:74px;
+  border-bottom:1px solid var(--line2);
+  background:#F7F8EE;
+}
+.item-row:last-child{border-bottom:0;}
+.group-card.purple .item-row{background:#F6F1F9;}
+.group-card.lime .item-row{background:#F4F8EA;}
+
+.cell{
+  padding:14px 12px;
+  min-width:0;
+  display:flex;
+  align-items:center;
+  border-right:1px solid var(--line2);
+  font-size:15px;
+  color:#3E4348;
+}
+
+.cell:last-child{border-right:0;}
+.cell.time{
+  color:#49515A;
+  font-weight:750;
+}
+
+.order-col{
+  justify-content:center;
+  padding:14px 8px;
+  color:#96A0AA;
+  font-size:14px;
+  font-weight:850;
+  background:#F9FAFB;
+}
+
+.order-col.current{
+  color:#1E7B54;
+}
+.cell.task{
+  gap:8px;
+  justify-content:space-between;
+  cursor:pointer;
+}
+.cell.task:active,
+.cell.time:active{
+  background:rgba(36,196,122,.05);
+}
+
+.task-main{
+  min-width:0;
+  display:flex;
+  align-items:center;
+  gap:8px;
+  font-weight:750;
+}
+
+.task-main .text{
+  min-width:0;
+  overflow:hidden;
+  text-overflow:ellipsis;
+  white-space:normal;
+  display:-webkit-box;
+  -webkit-line-clamp:2;
+  -webkit-box-orient:vertical;
+}
+
+.task-badge{
+  display:inline-flex;
+  align-items:center;
+  gap:4px;
+  padding:4px 7px;
+  border-radius:999px;
+  background:#FFF0E7;
+  color:#EA9B16;
+  font-size:12px;
+  font-weight:850;
+  white-space:nowrap;
+  flex-shrink:0;
+}
+
+.cell.check{
+  justify-content:center;
+  flex-direction:column;
+  gap:5px;
+  text-align:center;
+  font-weight:850;
+  cursor:pointer;
+}
+
+.cell.check:empty::after{
+  content:'';
+  width:22px;
+  height:22px;
+  border-radius:999px;
+  background:transparent;
+}
+
+.cell.check:active{
+  background:rgba(36,196,122,.06);
+}
+
+.check-emoji{
+  font-size:28px;
+  line-height:1;
+}
+
+.ratio{
+  font-size:12px;
+  color:var(--sub);
+  font-weight:850;
+}
+
+.empty-card{
+  margin-top:14px;
+  padding:34px 20px;
+  border-radius:22px;
+  background:#fff;
+  border:1px dashed #D9DEE5;
+  color:var(--sub);
+  text-align:center;
+}
+
+.empty-card .emoji{
+  font-size:34px;
+  margin-bottom:10px;
+}
+
+
+.stats-view{
+  display:grid;
+  gap:14px;
+}
+
+.stats-month{
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  gap:10px;
+  margin:2px 0 8px;
+}
+
+.stats-month button{
+  width:34px;
+  height:34px;
+  border-radius:12px;
+  background:#F7F8FA;
+  border:1px solid var(--line);
+  color:var(--sub);
+  font-size:18px;
+  font-weight:850;
+}
+
+.stats-month strong{
+  font-size:20px;
+  font-weight:880;
+  letter-spacing:-.04em;
+}
+
+.stats-card{
+  background:#fff;
+  border:1px solid var(--line);
+  border-radius:22px;
+  padding:18px;
+  box-shadow:0 8px 24px rgba(0,0,0,.045);
+}
+
+.stats-card-head{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:12px;
+  margin-bottom:14px;
+}
+
+.stats-card h3{
+  margin:0;
+  font-size:18px;
+  font-weight:880;
+  letter-spacing:-.035em;
+}
+
+.stats-card .sub{
+  color:var(--sub);
+  font-size:13px;
+  font-weight:650;
+  margin-top:4px;
+}
+
+.stats-percent{
+  font-size:22px;
+  font-weight:900;
+  letter-spacing:-.04em;
+  color:var(--ink);
+  white-space:nowrap;
+}
+
+.stats-progress{
+  height:12px;
+  border-radius:999px;
+  background:#F0F2F4;
+  overflow:hidden;
+}
+
+.stats-progress span{
+  display:block;
+  height:100%;
+  border-radius:999px;
+  background:#F7E89D;
+  width:0%;
+}
+
+.stats-grid{
+  display:grid;
+  grid-template-columns:repeat(3,1fr);
+  gap:10px;
+  margin-top:14px;
+}
+
+.stats-mini{
+  border-radius:18px;
+  background:#FAFBFC;
+  border:1px solid var(--line);
+  padding:13px 12px;
+}
+
+.stats-mini strong{
+  display:block;
+  font-size:18px;
+  font-weight:880;
+  letter-spacing:-.03em;
+}
+
+.stats-mini span{
+  display:block;
+  margin-top:3px;
+  color:var(--sub);
+  font-size:12px;
+  font-weight:750;
+}
+
+.habit-stats-grid{
+  display:grid;
+  grid-template-columns:repeat(2, minmax(0, 1fr));
+  gap:12px;
+}
+
+.habit-stat-card{
+  background:#fff;
+  border:1px solid var(--line);
+  border-radius:22px;
+  padding:16px 14px;
+  box-shadow:0 8px 22px rgba(0,0,0,.045);
+  min-width:0;
+}
+
+.habit-stat-title{
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  gap:6px;
+  font-size:16px;
+  font-weight:880;
+  letter-spacing:-.03em;
+  margin-bottom:14px;
+  text-align:center;
+  min-height:24px;
+}
+
+.month-dots{
+  display:grid;
+  grid-template-columns:repeat(7,1fr);
+  gap:5px;
+  margin:0 auto 14px;
+}
+
+.month-dot{
+  aspect-ratio:1/1;
+  border-radius:7px;
+  background:#EDF0F3;
+  color:#fff;
+  font-size:10px;
+  font-weight:800;
+  display:grid;
+  place-items:center;
+}
+
+.month-dot.done{
+  background:#8EA9DD;
+}
+
+.month-dot.missed{
+  background:#E5E8EB;
+  color:#C8CDD3;
+}
+
+.month-dot.future{
+  background:#F4F5F6;
+  color:#D6DBE0;
+}
+
+.habit-stat-footer{
+  display:grid;
+  grid-template-columns:1fr 1px 1fr;
+  gap:10px;
+  align-items:center;
+  color:var(--sub);
+  font-size:14px;
+  font-weight:850;
+  text-align:center;
+}
+
+.habit-stat-footer .divider{
+  height:18px;
+  background:var(--line);
+}
+
+.habit-stat-footer strong{
+  color:#6B7684;
+  font-weight:900;
+}
+
+.weight-stat-list{
+  display:grid;
+  gap:8px;
+  margin-top:12px;
+}
+
+.weight-stat-row{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:12px;
+  padding:12px 13px;
+  border-radius:16px;
+  background:#FAFBFC;
+  border:1px solid var(--line);
+  font-size:14px;
+  font-weight:750;
+}
+
+.weight-stat-row strong{
+  color:var(--green-dark);
+  font-weight:900;
+}
+
+@media(max-width:520px){
+  .stats-grid{
+    grid-template-columns:1fr;
+  }
+  .habit-stats-grid{
+    grid-template-columns:1fr 1fr;
+    gap:10px;
+  }
+  .habit-stat-card{
+    padding:15px 12px;
+  }
+  .month-dots{
+    gap:4px;
+  }
+  .habit-stat-title{
+    font-size:15px;
+  }
+}
+
+.fab{display:none !important;}
+.fab-btn{display:none !important;}
+.fab-btn .plus{display:none !important;}
+
+
+.bottom-nav{
+  position:fixed;
+  left:50%;
+  bottom:0;
+  transform:translateX(-50%);
+  z-index:60;
+  width:min(720px,100%);
+  background:rgba(255,255,255,.98);
+  backdrop-filter:blur(14px);
+  -webkit-backdrop-filter:blur(14px);
+  border-top:1px solid rgba(221,227,234,.95);
+  padding:10px 12px 10px;
+}
+
+.nav-add-btn{
+  position:absolute;
+  right:22px;
+  top:-68px;
+  width:58px;
+  height:58px;
+  border-radius:999px;
+  background:linear-gradient(135deg,#1AA86F,#4FC791);
+  color:#fff;
+  font-size:30px;
+  font-weight:600;
+  line-height:1;
+  display:grid;
+  place-items:center;
+  box-shadow:0 14px 30px rgba(25,165,111,.26);
+}
+
+.nav-add-btn:active{
+  transform:scale(.96);
+}
+
+.bottom-nav-inner{
+  display:grid;
+  grid-template-columns:repeat(3,1fr);
+  gap:4px;
+}
+
+.bottom-nav-btn{
+  min-height:58px;
+  border-radius:18px;
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  justify-content:center;
+  gap:4px;
+  color:#A1A9B3;
+}
+
+.bottom-nav-btn .nav-icon{
+  font-size:22px;
+  line-height:1;
+}
+
+.bottom-nav-btn .nav-label{
+  font-size:12.5px;
+  font-weight:820;
+  letter-spacing:-.02em;
+}
+
+.bottom-nav-btn.active{
+  color:var(--green-dark);
+  background:#F3FBF7;
+}
+
+
+.mypage-top-tabs{
+  display:grid;
+  grid-template-columns:1fr 1fr;
+  border-bottom:1px solid var(--line);
+  margin:0 -16px 22px;
+}
+
+.mypage-tab{
+  height:58px;
+  display:grid;
+  place-items:center;
+  color:#C0C5CC;
+  font-size:17px;
+  font-weight:850;
+  letter-spacing:-.03em;
+  position:relative;
+}
+
+.mypage-tab.active{
+  color:#365A3D;
+}
+
+.mypage-tab.active::after{
+  content:'';
+  position:absolute;
+  left:18%;
+  right:18%;
+  bottom:0;
+  height:4px;
+  border-radius:999px 999px 0 0;
+  background:#365A3D;
+}
+
+.mypage-profile{
+  padding:20px 0 0;
+}
+
+.mypage-profile-row{
+  display:flex;
+  align-items:center;
+  gap:18px;
+  margin-bottom:24px;
+}
+
+.mypage-photo{
+  width:96px;
+  height:96px;
+  border-radius:999px;
+  overflow:hidden;
+  flex-shrink:0;
+  background:linear-gradient(135deg,#E8F7F0,#D6EDE1);
+  display:grid;
+  place-items:center;
+  border:1px solid var(--line);
+}
+
+.mypage-photo-inner{
+  width:100%;
+  height:100%;
+  display:grid;
+  place-items:center;
+  font-size:42px;
+  background:radial-gradient(circle at 30% 30%, #FFFFFF 0 16%, transparent 17%),
+             linear-gradient(135deg,#CFEBDD,#F4FAF7);
+}
+
+.mypage-name-line{
+  display:flex;
+  align-items:baseline;
+  gap:8px;
+  margin-bottom:10px;
+}
+
+.mypage-name{
+  font-size:22px;
+  font-weight:900;
+  letter-spacing:-.04em;
+}
+
+.mypage-handle{
+  color:#8B95A1;
+  font-size:18px;
+  font-weight:700;
+  letter-spacing:-.03em;
+}
+
+.mypage-meta{
+  display:flex;
+  align-items:center;
+  gap:12px;
+  flex-wrap:wrap;
+  color:#4E5968;
+  font-size:17px;
+  font-weight:820;
+  letter-spacing:-.03em;
+}
+
+.mypage-meta .green{
+  color:#24A66D;
+  font-weight:900;
+}
+
+.mypage-divider{
+  width:1px;
+  height:18px;
+  background:#E1E6EB;
+}
+
+.mypage-bio{
+  margin:22px 0 22px;
+  color:#191F28;
+  font-size:21px;
+  font-weight:720;
+  letter-spacing:-.035em;
+  line-height:1.48;
+}
+
+.mypage-link{
+  display:flex;
+  align-items:center;
+  gap:8px;
+  color:#6B7684;
+  font-size:17px;
+  font-weight:780;
+  margin-bottom:40px;
+}
+
+.mypage-edit-btn{
+  width:100%;
+  height:58px;
+  border-radius:10px;
+  background:#fff;
+  border:1.5px solid #DDE3EA;
+  color:#6B7684;
+  font-size:18px;
+  font-weight:880;
+  letter-spacing:-.03em;
+}
+
+.mypage-stamp-empty{
+  padding:54px 20px;
+  text-align:center;
+  color:#8B95A1;
+  font-size:15px;
+  font-weight:700;
+  line-height:1.5;
+}
+
+.mypage-stamp-empty .emoji{
+  font-size:36px;
+  margin-bottom:12px;
+}
+
+@media(max-width:520px){
+  .mypage-profile-row{
+    gap:16px;
+  }
+  .mypage-photo{
+    width:86px;
+    height:86px;
+  }
+  .mypage-name{
+    font-size:21px;
+  }
+  .mypage-handle{
+    font-size:17px;
+  }
+  .mypage-meta{
+    font-size:16px;
+    gap:10px;
+  }
+  .mypage-bio{
+    font-size:20px;
+  }
+}
+
+.profile-view{
+  display:grid;
+  gap:14px;
+}
+
+.profile-card{
+  background:#fff;
+  border:1px solid var(--line);
+  border-radius:24px;
+  padding:22px 18px;
+  box-shadow:0 8px 24px rgba(0,0,0,.045);
+}
+
+.profile-head{
+  display:flex;
+  align-items:center;
+  gap:14px;
+  margin-bottom:14px;
+}
+
+.profile-avatar{
+  width:56px;
+  height:56px;
+  border-radius:18px;
+  display:grid;
+  place-items:center;
+  background:var(--green-soft);
+  color:var(--green-dark);
+  font-size:28px;
+  font-weight:900;
+}
+
+.profile-name{
+  font-size:19px;
+  font-weight:880;
+  letter-spacing:-.035em;
+}
+
+.profile-sub{
+  margin-top:4px;
+  color:var(--sub);
+  font-size:13px;
+  font-weight:650;
+}
+
+.profile-menu{
+  display:grid;
+  gap:10px;
+}
+
+.profile-row{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:12px;
+  padding:14px 15px;
+  border-radius:18px;
+  background:#FAFBFC;
+  border:1px solid var(--line);
+  font-size:15px;
+  font-weight:780;
+  color:var(--ink);
+}
+
+.profile-row .right{
+  color:#A4ADB8;
+  font-weight:900;
+}
+
+.modal-backdrop{
+  position:fixed;
+  inset:0;
+  z-index:60;
+  opacity:0;
+  pointer-events:none;
+  background:rgba(17,24,39,.42);
+  transition:opacity .18s ease;
+}
+.modal-backdrop.show{
+  opacity:1;
+  pointer-events:auto;
+}
+
+.sheet{
+  position:fixed;
+  left:50%;
+  bottom:0;
+  width:min(720px,100%);
+  max-height:88vh;
+  overflow:auto;
+  transform:translate(-50%,105%);
+  z-index:70;
+  background:#fff;
+  border-radius:30px 30px 0 0;
+  box-shadow:0 -16px 46px rgba(0,0,0,.18);
+  transition:transform .22s ease;
+  padding:10px 18px calc(24px + var(--safe-bottom));
+}
+.sheet.show{transform:translate(-50%,0);}
+
+.sheet-grabber{
+  width:40px;
+  height:5px;
+  border-radius:999px;
+  background:#D5DBE2;
+  margin:2px auto 16px;
+}
+
+.sheet-head{
+  display:flex;
+  align-items:flex-start;
+  justify-content:space-between;
+  gap:12px;
+  margin-bottom:16px;
+}
+.sheet-head h3{
+  margin:0;
+  font-size:22px;
+  font-weight:880;
+  letter-spacing:-.035em;
+}
+.sheet-head p{
+  margin:6px 0 0;
+  color:var(--sub);
+  font-size:14px;
+  line-height:1.45;
+}
+
+.icon-btn{
+  width:40px;
+  height:40px;
+  border-radius:14px;
+  background:#fff;
+  border:1px solid var(--line);
+  display:grid;
+  place-items:center;
+  color:var(--ink);
+  font-size:20px;
+  font-weight:800;
+  flex-shrink:0;
+}
+
+.form{display:grid;gap:12px;}
+.field label{
+  display:block;
+  margin-bottom:7px;
+  color:var(--sub);
+  font-size:13px;
+  font-weight:780;
+}
+.field input,
+.field textarea,
+.field select{
+  width:100%;
+  border:1px solid var(--line);
+  background:#FAFBFC;
+  color:var(--ink);
+  border-radius:16px;
+  padding:14px;
+  outline:none;
+  font-size:15px;
+}
+.field textarea{
+  resize:vertical;
+  min-height:88px;
+  line-height:1.55;
+}
+.field input:focus,
+.field textarea:focus,
+.field select:focus{
+  background:#fff;
+  border-color:rgba(36,196,122,.55);
+  box-shadow:0 0 0 4px rgba(36,196,122,.10);
+}
+
+.two{display:grid;grid-template-columns:1fr 1fr;gap:10px;}
+
+.footer-actions{
+  display:grid;
+  grid-template-columns:1fr 1fr;
+  gap:10px;
+  margin-top:8px;
+}
+
+.secondary-btn,
+.primary-btn{
+  height:52px;
+  border-radius:18px;
+  font-size:15px;
+  font-weight:850;
+}
+.secondary-btn{background:#F2F4F6;color:#333D4B;}
+.primary-btn{
+  background:linear-gradient(135deg,#1AA86F,#4FC791);
+  color:#fff;
+  box-shadow:0 10px 24px rgba(25,165,111,.22);
+}
+
+.action-head{
+  display:flex;
+  justify-content:space-between;
+  align-items:flex-start;
+  gap:14px;
+  margin-bottom:16px;
+}
+.action-eyebrow{
+  display:inline-flex;
+  align-items:center;
+  height:28px;
+  padding:0 10px;
+  border-radius:999px;
+  background:var(--green-soft);
+  color:var(--green-dark);
+  font-size:12.5px;
+  font-weight:850;
+  margin-bottom:8px;
+}
+.action-head h3{
+  margin:0;
+  font-size:21px;
+  font-weight:880;
+  line-height:1.32;
+  letter-spacing:-.03em;
+}
+.action-list{
+  display:grid;
+  gap:10px;
+}
+.action-row{
+  width:100%;
+  display:flex;
+  align-items:center;
+  gap:13px;
+  text-align:left;
+  background:#fff;
+  border:1px solid var(--line);
+  border-radius:18px;
+  padding:15px 14px;
+  box-shadow:0 6px 18px rgba(0,0,0,.035);
+}
+.action-row:active{
+  background:#F8FAF9;
+  transform:scale(.995);
+}
+.action-icon{
+  width:40px;
+  height:40px;
+  border-radius:14px;
+  background:#F5F7F8;
+  display:grid;
+  place-items:center;
+  font-size:20px;
+  flex-shrink:0;
+}
+.action-row strong{
+  display:block;
+  font-size:15px;
+  font-weight:850;
+  color:var(--ink);
+}
+.action-row em{
+  display:block;
+  margin-top:3px;
+  color:var(--sub);
+  font-size:12.5px;
+  font-style:normal;
+  font-weight:650;
+}
+.action-row.danger .action-icon{background:#FFF0F0;}
+.action-row.danger strong{color:#F04452;}
+
+.calendar-sheet{
+  min-height:61vh;
+  padding:18px 28px calc(34px + var(--safe-bottom));
+  border-radius:30px 30px 0 0;
+}
+
+.calendar-head{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:12px;
+  margin:16px 0 26px;
+}
+
+.calendar-head-center{
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  gap:12px;
+  flex:1;
+  min-width:0;
+}
+
+.calendar-head-center h3{
+  margin:0;
+  font-size:22px;
+  font-weight:880;
+  letter-spacing:-.04em;
+  white-space:nowrap;
+}
+
+.today-btn{
+  height:42px;
+  padding:0 15px;
+  border:1px solid var(--line2);
+  border-radius:14px;
+  background:#fff;
+  color:#4E5968;
+  font-size:16px;
+  font-weight:800;
+  white-space:nowrap;
+}
+
+.calendar-weekdays{
+  display:grid;
+  grid-template-columns:repeat(7,1fr);
+  gap:4px;
+  margin-bottom:16px;
+}
+
+.calendar-weekdays span{
+  text-align:center;
+  color:#98A2AE;
+  font-size:15px;
+  font-weight:820;
+  padding:8px 0;
+}
+
+.calendar-grid{
+  display:grid;
+  grid-template-columns:repeat(7,1fr);
+  gap:20px 4px;
+}
+
+.calendar-day{
+  min-height:48px;
+  border-radius:18px;
+  display:grid;
+  place-items:center;
+  position:relative;
+  color:#4E5968;
+  font-size:17px;
+  font-weight:760;
+  background:transparent;
+}
+
+.calendar-day.blank{
+  pointer-events:none;
+  color:#C7CED6;
+}
+
+.calendar-day.outside{
+  color:#A8B0BA;
+}
+
+.calendar-day.selected{
+  color:#fff;
+}
+
+.calendar-day.selected::before{
+  content:'';
+  position:absolute;
+  width:46px;
+  height:46px;
+  border-radius:999px;
+  background:#24C47A;
+  z-index:-1;
+}
+
+.calendar-day.done:not(.selected)::after,
+.calendar-day.partial:not(.selected)::after,
+.calendar-day.has-board:not(.selected)::after{
+  content:'';
+  position:absolute;
+  bottom:3px;
+  width:5px;
+  height:5px;
+  border-radius:999px;
+  background:#24C47A;
+}
+.calendar-day.partial:not(.selected)::after{background:var(--yellow);}
+.calendar-day.low:not(.selected)::after{
+  background:#F46A6A;
+}
+.calendar-day:active{transform:scale(.97);}
+
+
+.weight-popup{
+  position:fixed;
+  left:50%;
+  top:50%;
+  transform:translate(-50%,-46%) scale(.96);
+  z-index:80;
+  width:min(360px,calc(100% - 44px));
+  background:#fff;
+  border-radius:28px;
+  padding:22px 20px 18px;
+  box-shadow:0 24px 70px rgba(0,0,0,.22);
+  opacity:0;
+  pointer-events:none;
+  transition:all .2s ease;
+}
+
+.weight-popup.show{
+  opacity:1;
+  pointer-events:auto;
+  transform:translate(-50%,-50%) scale(1);
+}
+
+.weight-head{
+  display:flex;
+  align-items:flex-start;
+  justify-content:space-between;
+  gap:12px;
+  margin-bottom:18px;
+}
+
+.weight-head h3{
+  margin:0;
+  font-size:22px;
+  font-weight:880;
+  letter-spacing:-.035em;
+}
+
+.weight-head p{
+  margin:5px 0 0;
+  color:var(--sub);
+  font-size:13.5px;
+  font-weight:650;
+  line-height:1.42;
+}
+
+.weight-input-wrap{
+  position:relative;
+  margin-bottom:14px;
+}
+
+.weight-input-wrap input{
+  width:100%;
+  height:64px;
+  padding:0 58px 0 18px;
+  border:1px solid var(--line2);
+  border-radius:20px;
+  background:#FAFBFC;
+  color:var(--ink);
+  font-size:26px;
+  font-weight:850;
+  letter-spacing:-.03em;
+  outline:none;
+}
+
+.weight-input-wrap input:focus{
+  background:#fff;
+  border-color:rgba(36,196,122,.55);
+  box-shadow:0 0 0 4px rgba(36,196,122,.10);
+}
+
+.weight-unit{
+  position:absolute;
+  right:18px;
+  top:50%;
+  transform:translateY(-50%);
+  color:var(--sub);
+  font-size:16px;
+  font-weight:800;
+}
+
+.weight-actions{
+  display:grid;
+  grid-template-columns:1fr 1fr;
+  gap:10px;
+}
+
+.weight-note{
+  margin:0 0 14px;
+  padding:12px 13px;
+  border-radius:16px;
+  background:var(--green-soft);
+  color:var(--green-dark);
+  font-size:13px;
+  font-weight:750;
+  line-height:1.45;
+}
+
+.weight-value{
+  font-size:13px;
+  font-weight:850;
+  color:var(--green-dark);
+}
+
+
+.toast{
+  position:fixed;
+  left:50%;
+  bottom:156px;
+  transform:translateX(-50%) translateY(18px);
+  z-index:90;
+  opacity:0;
+  pointer-events:none;
+  transition:all .18s ease;
+  background:rgba(25,31,40,.93);
+  color:#fff;
+  padding:12px 16px;
+  border-radius:999px;
+  font-size:14px;
+  font-weight:780;
+}
+.toast.show{
+  opacity:1;
+  transform:translateX(-50%) translateY(0);
+}
+
+@media(max-width:520px){
+  .app{padding-left:14px;padding-right:14px;}
+  .week-strip{gap:8px;}
+  .day-pill{min-height:62px;border-radius:22px;}
+  .day-pill .num{width:40px;height:40px;font-size:15px;}
+  .two{grid-template-columns:1fr;}
+  .calendar-sheet{padding-left:24px;padding-right:24px;}
+  .calendar-grid{gap:18px 4px;}
+  .calendar-head-center h3{font-size:21px;}
+}
+</style>
+</head>
+<body>
+<div class="app">
+  <header class="header">
+    <div class="topbar">
+      <button class="month-btn" id="openCalendar" type="button">
+        <span id="monthLabel">2026년 5월</span>
+        <span class="caret">⌄</span>
+      </button>
+    </div>
+    <div class="week-strip" id="weekStrip"></div>
+  </header>
+
+  <section class="tabs-wrap">
+    <div class="segment">
+      <button class="segment-btn active" type="button" data-view="routine">루틴</button>
+      <button class="segment-btn" type="button" data-view="todo">투두 <span class="count" id="todoCount">(0)</span></button>
+    </div>
+
+    <div class="toolbar" id="routineToolbar">
+      <div class="chips" id="categoryChips"></div>
+    </div>
+
+    <div class="board" id="board"></div>
+  </section>
+</div>
+
+
+<div class="bottom-nav">
+  <button class="nav-add-btn" id="openAddSheet" type="button" aria-label="추가">＋</button>
+  <div class="bottom-nav-inner">
+    <button class="bottom-nav-btn active" type="button" data-bottom-nav="home">
+      <span class="nav-icon">🏠</span>
+      <span class="nav-label">홈</span>
+    </button>
+    <button class="bottom-nav-btn" type="button" data-bottom-nav="stats">
+      <span class="nav-icon">📊</span>
+      <span class="nav-label">통계</span>
+    </button>
+    <button class="bottom-nav-btn" type="button" data-bottom-nav="profile">
+      <span class="nav-icon">👤</span>
+      <span class="nav-label">내정보</span>
+    </button>
+  </div>
+</div>
+
+
+<div class="modal-backdrop" id="calendarBackdrop"></div>
+<section class="sheet calendar-sheet" id="calendarSheet">
+  <div class="sheet-grabber"></div>
+  <div class="calendar-head">
+    <button class="icon-btn" id="calendarPrev" type="button">‹</button>
+    <div class="calendar-head-center">
+      <h3 id="calendarTitle">2026년 5월</h3>
+      <button class="today-btn" id="calendarToday" type="button">오늘</button>
+    </div>
+    <button class="icon-btn" id="calendarNext" type="button">›</button>
+  </div>
+
+  <div class="calendar-weekdays">
+    <span>월</span><span>화</span><span>수</span><span>목</span><span>금</span><span>토</span><span>일</span>
+  </div>
+  <div class="calendar-grid" id="calendarGrid"></div>
+</section>
+
+<div class="modal-backdrop" id="addBackdrop"></div>
+<section class="sheet" id="addSheet">
+  <div class="sheet-grabber"></div>
+  <div class="sheet-head">
+    <div>
+      <h3 id="addSheetTitle">루틴 추가</h3>
+      <p id="addSheetDesc">선택한 날짜에 루틴을 추가합니다.</p>
+    </div>
+    <button class="icon-btn" id="closeAddSheet" type="button">✕</button>
+  </div>
+  <div id="addSheetBody"></div>
+</section>
+
+<div class="modal-backdrop" id="actionBackdrop"></div>
+<section class="sheet action-sheet" id="actionSheet">
+  <div class="sheet-grabber"></div>
+  <div class="action-head">
+    <div>
+      <div class="action-eyebrow" id="actionTime">루틴</div>
+      <h3 id="actionTitle">루틴 항목</h3>
+    </div>
+    <button class="icon-btn" id="closeActionSheet" type="button">✕</button>
+  </div>
+
+  <div class="action-list">
+    <button class="action-row" id="actionEdit" type="button">
+      <span class="action-icon">✏️</span>
+      <span><strong>루틴 수정</strong><em>이 루틴 항목의 내용과 시간을 수정합니다.</em></span>
+    </button>
+    <button class="action-row" id="actionTomorrow" type="button">
+      <span class="action-icon">🌤️</span>
+      <span><strong>내일 일정에도 추가</strong><em>같은 루틴을 내일 보드에 복사합니다.</em></span>
+    </button>
+    <button class="action-row" id="actionRepeatWeek" type="button">
+      <span class="action-icon">🔁</span>
+      <span><strong>이번 주 매일 반복</strong><em>이번 주 날짜들에 같은 루틴을 추가합니다.</em></span>
+    </button>
+    <button class="action-row" id="actionRepeatWeekday" type="button">
+      <span class="action-icon">🏢</span>
+      <span><strong>평일 반복</strong><em>월요일부터 금요일까지 반복 루틴으로 추가합니다.</em></span>
+    </button>
+    <button class="action-row danger" id="actionDelete" type="button">
+      <span class="action-icon">🗑️</span>
+      <span><strong>루틴 삭제</strong><em>이 날짜의 해당 루틴 항목을 삭제합니다.</em></span>
+    </button>
+  </div>
+</section>
+
+
+<div class="modal-backdrop" id="weightBackdrop"></div>
+<section class="weight-popup" id="weightPopup">
+  <div class="weight-head">
+    <div>
+      <h3>몸무게 기록</h3>
+      <p id="weightDateLabel">선택한 날짜에 몸무게를 저장합니다.</p>
+    </div>
+    <button class="icon-btn" id="closeWeightPopup" type="button">✕</button>
+  </div>
+
+  <p class="weight-note">저장하면 이 날짜의 몸무게 루틴이 자동으로 완료 처리돼요.</p>
+
+  <div class="weight-input-wrap">
+    <input id="weightInput" type="number" inputmode="decimal" step="0.1" placeholder="예: 54.3" />
+    <span class="weight-unit">kg</span>
+  </div>
+
+  <div class="weight-actions">
+    <button class="secondary-btn" id="cancelWeight" type="button">취소</button>
+    <button class="primary-btn" id="saveWeight" type="button">저장</button>
+  </div>
+</section>
+
+<div class="toast" id="toast">저장했어요</div>
+
+<script>
+(function(){
+  'use strict';
+
+  const STORAGE_KEY = 'routine_board_clean_v1';
+
+  const state = {
+    majorView: 'home',
+    view: 'routine',
+    selectedDateKey: '2026-05-28',
+    calendarYear: 2026,
+    calendarMonth: 5,
+    selectedCategory: '하루',
+    weekDays: [],
+    weightLogs: {},
+    selectedWeightTarget: null,
+    boardsByDate: {},
+    selectedRoutineAction: null,
+    editingRoutineTarget: null,
+    editingTodoTarget: null,
+    categories: [
+      { label:'하루', icon:'' },
+      { label:'건강 챙기기', icon:'💪' },
+      { label:'정돈된 일상', icon:'✨' },
+      { label:'나 돌보기', icon:'💚' },
+      { label:'출근', icon:'🚇' },
+      { label:'퇴근 후', icon:'🌙' },
+      { label:'고양이', icon:'🐈' }
+    ]
+  };
+
+  const sampleGroups = [
+    {
+      id: uid(),
+      category:'하루',
+      theme:'yellow',
+      label:'일어나자마자',
+      title:'🌞 모닝 루틴',
+      summaryEmoji:'🌞',
+      items:[
+        { habitKey:uid(), time:'일어나자마자', text:'공복에 물 한 잔', emoji:'🥛', checked:false },
+        { habitKey:uid(), time:'07:20', text:'몸무게 기록', emoji:'🧡', checked:false },
+        { habitKey:uid(), time:'07:25', text:'컨디션 체크', emoji:'✅', checked:false }
+      ]
+    }
+  ];
+
+  const weekStrip = document.getElementById('weekStrip');
+  const monthLabel = document.getElementById('monthLabel');
+  const board = document.getElementById('board');
+  const categoryChips = document.getElementById('categoryChips');
+  const todoCount = document.getElementById('todoCount');
+
+  const calendarBackdrop = document.getElementById('calendarBackdrop');
+  const calendarSheet = document.getElementById('calendarSheet');
+  const calendarGrid = document.getElementById('calendarGrid');
+  const calendarTitle = document.getElementById('calendarTitle');
+
+  const addBackdrop = document.getElementById('addBackdrop');
+  const addSheet = document.getElementById('addSheet');
+  const addSheetTitle = document.getElementById('addSheetTitle');
+  const addSheetDesc = document.getElementById('addSheetDesc');
+  const addSheetBody = document.getElementById('addSheetBody');
+
+  const actionBackdrop = document.getElementById('actionBackdrop');
+  const actionSheet = document.getElementById('actionSheet');
+  const toast = document.getElementById('toast');
+
+  const weightBackdrop = document.getElementById('weightBackdrop');
+  const weightPopup = document.getElementById('weightPopup');
+  const weightInput = document.getElementById('weightInput');
+  const weightDateLabel = document.getElementById('weightDateLabel');
+
+  function uid(){
+    if (window.crypto && crypto.randomUUID) return crypto.randomUUID();
+    return Date.now().toString(36) + Math.random().toString(36).slice(2,7);
+  }
+
+  function pad2(value){
+    return String(value).padStart(2,'0');
+  }
+
+  function formatDateKey(date){
+    return `${date.getFullYear()}-${pad2(date.getMonth()+1)}-${pad2(date.getDate())}`;
+  }
+
+  function parseDateKey(key){
+    const [year, month, day] = key.split('-').map(Number);
+    return { year, month, day };
+  }
+
+  function dateFromKey(key){
+    const { year, month, day } = parseDateKey(key);
+    return new Date(year, month - 1, day);
+  }
+
+  function buildWeek(dateKey){
+    const selected = dateFromKey(dateKey);
+    const jsDay = selected.getDay();
+    const mondayOffset = jsDay === 0 ? -6 : 1 - jsDay;
+    const monday = new Date(selected);
+    monday.setDate(selected.getDate() + mondayOffset);
+    const labels = ['일','월','화','수','목','금','토'];
+
+    state.weekDays = Array.from({ length:7 }, (_, idx) => {
+      const d = new Date(monday);
+      d.setDate(monday.getDate() + idx);
+      return {
+        key: formatDateKey(d),
+        label: labels[d.getDay()],
+        num: d.getDate()
+      };
+    });
+  }
+
+  function getSelectedDate(){
+    return parseDateKey(state.selectedDateKey);
+  }
+
+  function getSelectedLabel(){
+    const d = dateFromKey(state.selectedDateKey);
+    const labels = ['일','월','화','수','목','금','토'];
+    return `${d.getFullYear()}년 ${d.getMonth()+1}월 ${d.getDate()}일 ${labels[d.getDay()]}요일`;
+  }
+
+  function makeBoard(){
+    return { routineGroups:[], todos:[] };
+  }
+
+  function ensureBoard(dateKey = state.selectedDateKey){
+    if (!state.boardsByDate[dateKey]) state.boardsByDate[dateKey] = makeBoard();
+    return state.boardsByDate[dateKey];
+  }
+
+  function currentBoard(){
+    return ensureBoard(state.selectedDateKey);
+  }
+
+  function saveData(){
+    localStorage.setItem(STORAGE_KEY, JSON.stringify({
+      selectedDateKey: state.selectedDateKey,
+      boardsByDate: state.boardsByDate,
+      weightLogs: state.weightLogs,
+      majorView: state.majorView
+    }));
+  }
+
+  function loadData(){
+    const saved = localStorage.getItem(STORAGE_KEY);
+    if (!saved) {
+      state.boardsByDate[state.selectedDateKey] = {
+        routineGroups: structuredClone(sampleGroups),
+        todos: []
+      };
+      saveData();
+      return;
+    }
+
+    try{
+      const parsed = JSON.parse(saved);
+      state.boardsByDate = parsed.boardsByDate || {};
+      state.weightLogs = parsed.weightLogs || {};
+      state.majorView = parsed.majorView || state.majorView;
+      state.selectedDateKey = parsed.selectedDateKey || state.selectedDateKey;
+    }catch(e){
+      state.boardsByDate[state.selectedDateKey] = {
+        routineGroups: structuredClone(sampleGroups),
+        todos:[]
+      };
+    }
+
+    Object.values(state.boardsByDate).forEach(board => {
+      (board.routineGroups || []).forEach(group => {
+        (group.items || []).forEach(item => {
+          if (!item.habitKey) item.habitKey = uid();
+        });
+      });
+      if (!Array.isArray(board.todos)) board.todos = [];
+    });
+  }
+
+  function getBoardStatus(dateKey){
+    const b = state.boardsByDate[dateKey];
+    if (!b) return 'empty';
+
+    const items = (b.routineGroups || []).flatMap(group => group.items || []);
+    const todos = b.todos || [];
+    const total = items.length + todos.length;
+    const done = items.filter(item => item.checked).length + todos.filter(todo => todo.done).length;
+
+    if (!total) return 'empty';
+    if (done === 0) return 'has-board';
+
+    const ratio = done / total;
+
+    if (ratio >= 1) return 'done';      // 예: 3/3
+    if (ratio >= 2/3) return 'partial'; // 예: 2/3
+    return 'low';                       // 예: 1/3
+  }
+
+  function findItemByHabitKey(boardData, habitKey){
+    for (const group of (boardData.routineGroups || [])) {
+      const item = (group.items || []).find(it => it.habitKey === habitKey);
+      if (item) return item;
+    }
+    return null;
+  }
+
+  function getStreakBonus(item){
+    if (!item?.habitKey || !item.checked) return 0;
+    let cursor = dateFromKey(state.selectedDateKey);
+    let streakDays = 0;
+
+    while(true){
+      const key = formatDateKey(cursor);
+      const boardData = state.boardsByDate[key];
+      const matched = boardData ? findItemByHabitKey(boardData, item.habitKey) : null;
+      if (matched && matched.checked) {
+        streakDays += 1;
+        cursor.setDate(cursor.getDate() - 1);
+      } else {
+        break;
+      }
+    }
+    return Math.max(0, streakDays - 1);
+  }
+
+
+  function isWeightRoutine(item){
+    return String(item?.text || '').includes('몸무게');
+  }
+
+  function weightKeyForItem(item){
+    return item?.habitKey || 'default-weight';
+  }
+
+  function getWeightValue(item){
+    const dateLog = state.weightLogs[state.selectedDateKey] || {};
+    return dateLog[weightKeyForItem(item)] || '';
+  }
+
+
+  function render(){
+    buildWeek(state.selectedDateKey);
+    renderHeader();
+    renderTabs();
+    renderCategories();
+    renderBoard();
+  }
+
+  function renderHeader(){
+    const caret = document.querySelector('.month-btn .caret');
+
+    if (state.majorView === 'profile') {
+      monthLabel.textContent = '마이페이지';
+      if (caret) caret.style.display = 'none';
+      weekStrip.style.display = 'none';
+      return;
+    }
+
+    if (state.majorView === 'stats') {
+      monthLabel.textContent = '통계';
+      if (caret) caret.style.display = 'none';
+      weekStrip.style.display = 'none';
+      return;
+    }
+
+    const selected = getSelectedDate();
+    monthLabel.textContent = `${selected.year}년 ${selected.month}월`;
+    if (caret) caret.style.display = '';
+    weekStrip.style.display = 'grid';
+
+    weekStrip.innerHTML = state.weekDays.map(day => {
+      const statusClass = getBoardStatus(day.key);
+      const selectedClass = day.key === state.selectedDateKey ? 'selected' : '';
+      return `
+        <div class="day-col">
+          <div class="weekday">${day.label}</div>
+          <button class="day-pill ${selectedClass} ${statusClass}" type="button" data-date="${day.key}">
+            <div class="num">${day.num}</div>
+          </button>
+        </div>
+      `;
+    }).join('');
+  }
+
+  function renderTabs(){
+    document.querySelectorAll('.segment-btn').forEach(btn => {
+      btn.classList.toggle('active', btn.dataset.view === state.view);
+    });
+
+    document.querySelectorAll('.bottom-nav-btn').forEach(btn => {
+      btn.classList.toggle('active', btn.dataset.bottomNav === state.majorView);
+    });
+
+    const todos = currentBoard().todos || [];
+    todoCount.textContent = `(${todos.length})`;
+
+    const segment = document.querySelector('.segment');
+    const toolbar = document.getElementById('routineToolbar');
+    const addBtn = document.querySelector('.nav-add-btn');
+
+    if (state.majorView === 'home') {
+      if (segment) segment.style.display = 'grid';
+      if (toolbar) toolbar.style.display = state.view === 'routine' ? 'block' : 'none';
+      if (addBtn) addBtn.style.display = 'grid';
+    } else {
+      if (segment) segment.style.display = 'none';
+      if (toolbar) toolbar.style.display = 'none';
+      if (addBtn) addBtn.style.display = 'none';
+    }
+  }
+
+  function renderCategories(){
+    if (state.view !== 'routine') return;
+
+    categoryChips.innerHTML = `
+      ${state.categories.map(cat => `
+        <button class="chip ${state.selectedCategory === cat.label ? 'active' : ''}" type="button" data-category="${cat.label}">
+          ${cat.icon ? `<span>${cat.icon}</span>` : ''}
+          <span>${cat.label}</span>
+        </button>
+      `).join('')}
+      <button class="chip view-toggle" type="button">☷</button>
+    `;
+  }
+
+  function filteredGroups(){
+    const groups = currentBoard().routineGroups || [];
+    if (state.selectedCategory === '하루') return groups.filter(g => g.category === '하루');
+    return groups.filter(g => g.category === state.selectedCategory);
+  }
+
+  function renderBoard(){
+    if (state.majorView === 'stats') return renderStatsBoard();
+    if (state.majorView === 'profile') return renderProfileBoard();
+    if (state.view === 'todo') return renderTodoBoard();
+
+    const groups = filteredGroups();
+    if (!groups.length) {
+      board.innerHTML = `
+        <div class="empty-card">
+          <div class="emoji">🗂️</div>
+          <div><strong>${state.selectedCategory}</strong> 카테고리에 루틴이 없어요.</div>
+          <div style="margin-top:6px;">아래 버튼으로 이 날짜의 루틴을 추가해보세요.</div>
+        </div>
+      `;
+      return;
+    }
+
+    board.innerHTML = groups.map(group => {
+      const total = group.items.length;
+      const done = group.items.filter(item => item.checked).length;
+      return `
+        <section class="group">
+          <div class="group-card ${group.theme === 'yellow' ? '' : group.theme}">
+            <div class="group-head">
+              <div class="order-col" style="background:#EEF1BF;"></div>
+              <div class="label">${escapeHtml(group.label)}</div>
+              <div class="title">${escapeHtml(group.title)}</div>
+              <div class="score">
+                <div style="font-size:28px;line-height:1;">${escapeHtml(group.summaryEmoji)}</div>
+                <div>${done}/${total}</div>
+              </div>
+            </div>
+
+            ${group.items.map((item,idx) => {
+              const bonus = getStreakBonus(item);
+              return `
+                <div class="item-row">
+                  <div class="cell order-col ${idx===0 ? 'current' : ''}">${idx + 1}</div>
+                  <div class="cell time" data-open-routine="${idx}" data-group-id="${group.id}">${escapeHtml(item.time)}</div>
+                  <div class="cell task" data-open-routine="${idx}" data-group-id="${group.id}">
+                    <div class="task-main">
+                      <span class="text">${escapeHtml(item.text)}</span>
+                    </div>
+                    ${bonus > 0 ? `<span class="task-badge">🔥 ${bonus}</span>` : ''}
+                  </div>
+                  <button class="cell check" type="button" data-check-routine="${idx}" data-group-id="${group.id}">
+                    ${item.checked ? `<div class="check-emoji">${escapeHtml(item.emoji || '✅')}</div><div class="ratio">${isWeightRoutine(item) && getWeightValue(item) ? `<span class="weight-value">${escapeHtml(getWeightValue(item))}</span>` : '완료'}</div>` : ''}
+                  </button>
+                </div>
+              `;
+            }).join('')}
+          </div>
+        </section>
+      `;
+    }).join('');
+  }
+
+  function renderTodoBoard(){
+    const todos = currentBoard().todos || [];
+    if (!todos.length) {
+      board.innerHTML = `
+        <div class="empty-card">
+          <div class="emoji">📝</div>
+          <div>이 날짜의 투두가 아직 없어요.</div>
+          <div style="margin-top:6px;">아래 버튼으로 투두를 추가해보세요.</div>
+        </div>
+      `;
+      return;
+    }
+
+    const done = todos.filter(t => t.done).length;
+    board.innerHTML = `
+      <section class="group" style="grid-template-columns:1fr;">
+        <div class="group-card">
+          <div class="group-head" style="grid-template-columns:42px 116px 1fr 66px;">
+            <div class="order-col" style="background:#F0F3F6;"></div>
+            <div class="label" style="background:#F0F3F6;color:#35404C;">시간</div>
+            <div class="title" style="background:#F0F3F6;color:#35404C;">오늘의 투두</div>
+            <div class="score" style="background:#E8EDF2;color:#35404C;">
+              <div style="font-size:26px;line-height:1;">📝</div>
+              <div>${done}/${todos.length}</div>
+            </div>
+          </div>
+          ${todos.map((todo,idx) => `
+            <div class="item-row" style="grid-template-columns:42px 116px 1fr 66px;background:#FAFBFC;">
+              <div class="cell order-col ${idx===0 ? 'current' : ''}">${idx + 1}</div>
+              <div class="cell time" data-edit-todo="${idx}">${escapeHtml(todo.time || '')}</div>
+              <div class="cell task" data-edit-todo="${idx}">
+                <div class="task-main"><span class="text">${escapeHtml(todo.text)}</span></div>
+              </div>
+              <button class="cell check" type="button" data-check-todo="${idx}">
+                ${todo.done ? `<div class="check-emoji">${escapeHtml(todo.emoji || '✅')}</div><div class="ratio">완료</div>` : ''}
+              </button>
+            </div>
+          `).join('')}
+        </div>
+      </section>
+    `;
+  }
+
+
+  function monthStartEnd(){
+    const selected = getSelectedDate();
+    const year = selected.year;
+    const month = selected.month;
+    const days = new Date(year, month, 0).getDate();
+    return { year, month, days };
+  }
+
+  function getMonthKeys(){
+    const { year, month, days } = monthStartEnd();
+    const keys = [];
+    for (let day = 1; day <= days; day++) {
+      keys.push(`${year}-${pad2(month)}-${pad2(day)}`);
+    }
+    return keys;
+  }
+
+  function collectMonthRoutineItems(){
+    const keys = getMonthKeys();
+    const map = new Map();
+
+    keys.forEach(key => {
+      const b = state.boardsByDate[key];
+      if (!b) return;
+
+      (b.routineGroups || []).forEach(group => {
+        (group.items || []).forEach(item => {
+          const id = item.habitKey || `${group.title}_${item.time}_${item.text}`;
+          if (!map.has(id)) {
+            map.set(id, {
+              id,
+              title: item.text,
+              time: item.time,
+              emoji: item.emoji || group.summaryEmoji || '✅',
+              category: group.category,
+              records: {}
+            });
+          }
+          map.get(id).records[key] = {
+            exists: true,
+            checked: !!item.checked
+          };
+        });
+      });
+    });
+
+    return Array.from(map.values());
+  }
+
+  function getMonthSummary(){
+    const keys = getMonthKeys();
+    let routineTotal = 0;
+    let routineDone = 0;
+    let todoTotal = 0;
+    let todoDone = 0;
+
+    keys.forEach(key => {
+      const b = state.boardsByDate[key];
+      if (!b) return;
+
+      (b.routineGroups || []).forEach(group => {
+        (group.items || []).forEach(item => {
+          routineTotal += 1;
+          if (item.checked) routineDone += 1;
+        });
+      });
+
+      (b.todos || []).forEach(todo => {
+        todoTotal += 1;
+        if (todo.done) todoDone += 1;
+      });
+    });
+
+    const total = routineTotal + todoTotal;
+    const done = routineDone + todoDone;
+    const rate = total ? Math.round(done / total * 100) : 0;
+
+    return { routineTotal, routineDone, todoTotal, todoDone, total, done, rate };
+  }
+
+  function getWeightStats(){
+    const keys = getMonthKeys();
+    const rows = [];
+
+    keys.forEach(key => {
+      const log = state.weightLogs[key] || {};
+      Object.values(log).forEach(value => {
+        const number = parseFloat(String(value).replace('kg',''));
+        if (!Number.isNaN(number)) {
+          rows.push({ key, value: number });
+        }
+      });
+    });
+
+    if (!rows.length) return null;
+
+    const latest = rows[rows.length - 1];
+    const avg = rows.reduce((sum, row) => sum + row.value, 0) / rows.length;
+    const min = Math.min(...rows.map(row => row.value));
+    const max = Math.max(...rows.map(row => row.value));
+
+    return {
+      count: rows.length,
+      latest,
+      avg: Math.round(avg * 10) / 10,
+      min,
+      max
+    };
+  }
+
+  function renderStatsBoard(){
+    const { year, month, days } = monthStartEnd();
+    const summary = getMonthSummary();
+    const habits = collectMonthRoutineItems();
+    const weightStats = getWeightStats();
+
+    const habitCards = habits.length ? habits.map(habit => {
+      const keys = getMonthKeys();
+      const activeDays = keys.filter(key => habit.records[key]?.exists).length;
+      const doneDays = keys.filter(key => habit.records[key]?.checked).length;
+      const rate = activeDays ? Math.round(doneDays / activeDays * 100) : 0;
+
+      const dots = keys.map((key, index) => {
+        const day = index + 1;
+        const rec = habit.records[key];
+        const cls = rec?.checked ? 'done' : rec?.exists ? 'missed' : 'future';
+        return `<span class="month-dot ${cls}">${day}</span>`;
+      }).join('');
+
+      return `
+        <div class="habit-stat-card">
+          <div class="habit-stat-title">
+            <span>${escapeHtml(habit.emoji)}</span>
+            <span>${escapeHtml(habit.title)}</span>
+          </div>
+          <div class="month-dots">${dots}</div>
+          <div class="habit-stat-footer">
+            <span>달성률 <strong>${rate}%</strong></span>
+            <span class="divider"></span>
+            <span>성공 <strong>${doneDays}</strong></span>
+          </div>
+        </div>
+      `;
+    }).join('') : `
+      <div class="empty-card" style="grid-column:1/-1;">
+        <div class="emoji">📊</div>
+        <div>이번 달 통계로 볼 루틴이 아직 없어요.</div>
+        <div style="margin-top:6px;">루틴을 추가하고 체크하면 통계가 쌓입니다.</div>
+      </div>
+    `;
+
+    board.innerHTML = `
+      <div class="stats-view">
+        <div class="stats-month">
+          <button type="button" data-stats-month="-1">‹</button>
+          <strong>${year}년 ${month}월 통계</strong>
+          <button type="button" data-stats-month="1">›</button>
+        </div>
+
+        <section class="stats-card">
+          <div class="stats-card-head">
+            <div>
+              <h3>📊 목표 달성률</h3>
+              <div class="sub">루틴과 투두 완료를 합산한 월간 달성률입니다.</div>
+            </div>
+            <div class="stats-percent">${summary.rate}%</div>
+          </div>
+          <div class="stats-progress">
+            <span style="width:${summary.rate}%"></span>
+          </div>
+          <div class="stats-grid">
+            <div class="stats-mini">
+              <strong>${summary.done}/${summary.total}</strong>
+              <span>전체 완료</span>
+            </div>
+            <div class="stats-mini">
+              <strong>${summary.routineDone}/${summary.routineTotal}</strong>
+              <span>루틴 완료</span>
+            </div>
+            <div class="stats-mini">
+              <strong>${summary.todoDone}/${summary.todoTotal}</strong>
+              <span>투두 완료</span>
+            </div>
+          </div>
+        </section>
+
+        ${weightStats ? `
+          <section class="stats-card">
+            <div class="stats-card-head">
+              <div>
+                <h3>⚖️ 몸무게 기록</h3>
+                <div class="sub">이번 달 몸무게 기록 요약입니다.</div>
+              </div>
+            </div>
+            <div class="weight-stat-list">
+              <div class="weight-stat-row"><span>최근 기록</span><strong>${weightStats.latest.value}kg</strong></div>
+              <div class="weight-stat-row"><span>평균</span><strong>${weightStats.avg}kg</strong></div>
+              <div class="weight-stat-row"><span>기록 횟수</span><strong>${weightStats.count}회</strong></div>
+            </div>
+          </section>
+        ` : ''}
+
+        <section class="habit-stats-grid">
+          ${habitCards}
+        </section>
+      </div>
+    `;
+  }
+
+  function moveStatsMonth(direction){
+    const selected = getSelectedDate();
+    const next = new Date(selected.year, selected.month - 1 + direction, 1);
+    state.selectedDateKey = formatDateKey(next);
+    state.selectedCategory = '하루';
+    state.majorView = 'stats';
+    ensureBoard();
+    saveData();
+    render();
+  }
+
+
+
+
+  function boardHasAnyRecord(dateKey){
+    const b = state.boardsByDate[dateKey];
+    if (!b) return false;
+
+    const hasRoutine = (b.routineGroups || []).some(group => (group.items || []).length > 0);
+    const hasTodo = (b.todos || []).length > 0;
+    const hasWeight = state.weightLogs && state.weightLogs[dateKey] && Object.keys(state.weightLogs[dateKey]).length > 0;
+
+    return hasRoutine || hasTodo || hasWeight;
+  }
+
+  function getRoutineStartDateKey(){
+    const keys = Object.keys(state.boardsByDate || {})
+      .filter(boardHasAnyRecord)
+      .sort();
+
+    return keys[0] || state.selectedDateKey;
+  }
+
+  function getRoutineDayNumber(){
+    const startKey = getRoutineStartDateKey();
+    const start = dateFromKey(startKey);
+    const current = dateFromKey(state.selectedDateKey);
+
+    const diff = Math.floor((current - start) / (1000 * 60 * 60 * 24));
+    return Math.max(1, diff + 1);
+  }
+
+
+  function renderProfileBoard(){
+    board.innerHTML = `
+      <div class="profile-view">
+        <div class="mypage-top-tabs">
+          <button class="mypage-tab active" type="button">내정보</button>
+          <button class="mypage-tab" type="button" data-mypage-stamp>배지/스탬프</button>
+        </div>
+
+        <section class="mypage-profile">
+          <div class="mypage-profile-row">
+            <div class="mypage-photo">
+              <div class="mypage-photo-inner">🌱</div>
+            </div>
+
+            <div style="min-width:0;">
+              <div class="mypage-name-line">
+                <span class="mypage-name">솔</span>
+                <span class="mypage-handle">@routine_board</span>
+              </div>
+
+              <div class="mypage-meta">
+                <span>루틴 🌱</span>
+                <span class="mypage-divider"></span>
+                <span>일기 -</span>
+                <span class="mypage-divider"></span>
+                <span>루틴 <span class="green">${getRoutineDayNumber()}</span>일차</span>
+              </div>
+            </div>
+          </div>
+
+          <div class="mypage-bio">아직 자기소개가 없어요 😊</div>
+
+          <div class="mypage-link">
+            <span>◎</span>
+            <span>인스타그램을 등록해봐요!</span>
+          </div>
+
+          <button class="mypage-edit-btn" type="button">프로필 편집</button>
+        </section>
+      </div>
+    `;
+  }
+
+  function switchBottomNav(target){
+    state.majorView = target;
+
+    if (target === 'home') {
+      if (state.view === 'stats') state.view = 'routine';
+      if (state.view !== 'routine' && state.view !== 'todo') state.view = 'routine';
+    }
+
+    if (target === 'stats') {
+      state.view = 'stats';
+    }
+
+    if (target === 'profile') {
+      state.view = 'profile';
+    }
+
+    saveData();
+    render();
+  }
+
+
+  function openCalendarSheet(){
+    const selected = getSelectedDate();
+    state.calendarYear = selected.year;
+    state.calendarMonth = selected.month;
+    renderCalendar();
+    calendarBackdrop.classList.add('show');
+    calendarSheet.classList.add('show');
+  }
+
+  function closeCalendarSheet(){
+    calendarBackdrop.classList.remove('show');
+    calendarSheet.classList.remove('show');
+  }
+
+  function renderCalendar(){
+    calendarTitle.textContent = `${state.calendarYear}년 ${state.calendarMonth}월`;
+
+    const first = new Date(state.calendarYear, state.calendarMonth - 1, 1);
+    const last = new Date(state.calendarYear, state.calendarMonth, 0);
+    const firstDay = first.getDay();
+    const leading = firstDay === 0 ? 6 : firstDay - 1;
+    const daysInMonth = last.getDate();
+
+    const prevLast = new Date(state.calendarYear, state.calendarMonth - 1, 0).getDate();
+    const cells = [];
+
+    for (let i=leading; i>0; i--) {
+      cells.push(`<button class="calendar-day blank outside" type="button">${prevLast - i + 1}</button>`);
+    }
+
+    for (let day=1; day<=daysInMonth; day++) {
+      const key = `${state.calendarYear}-${pad2(state.calendarMonth)}-${pad2(day)}`;
+      const status = getBoardStatus(key);
+      const selected = key === state.selectedDateKey ? 'selected' : '';
+      cells.push(`<button class="calendar-day ${selected} ${status}" type="button" data-calendar-date="${key}">${day}</button>`);
+    }
+
+    while (cells.length % 7 !== 0) {
+      const nextDay = cells.length % 7;
+      cells.push(`<button class="calendar-day blank outside" type="button">${nextDay}</button>`);
+    }
+
+    calendarGrid.innerHTML = cells.join('');
+  }
+
+  function moveCalendarMonth(direction){
+    state.calendarMonth += direction;
+    if (state.calendarMonth < 1) {
+      state.calendarMonth = 12;
+      state.calendarYear -= 1;
+    }
+    if (state.calendarMonth > 12) {
+      state.calendarMonth = 1;
+      state.calendarYear += 1;
+    }
+    renderCalendar();
+  }
+
+  function selectDate(dateKey){
+    state.selectedDateKey = dateKey;
+    state.selectedCategory = '하루';
+    state.view = 'routine';
+    ensureBoard();
+    saveData();
+    closeCalendarSheet();
+    render();
+  }
+
+  function goToday(){
+    selectDate(formatDateKey(new Date()));
+  }
+
+  function openAddSheet(){
+    if (state.majorView !== 'home') return;
+    if (state.view === 'todo') {
+      openTodoAddSheet();
+      return;
+    }
+    openRoutineChoiceSheet();
+  }
+
+  function closeAddSheet(){
+    addBackdrop.classList.remove('show');
+    addSheet.classList.remove('show');
+    state.editingRoutineTarget = null;
+    state.editingTodoTarget = null;
+  }
+
+  function showAddSheet(){
+    addBackdrop.classList.add('show');
+    addSheet.classList.add('show');
+  }
+
+
+
+  function getOrCreateUngroupedRoutineGroup(){
+    const b = currentBoard();
+    let group = (b.routineGroups || []).find(g => g.isUngrouped);
+    if (!group) {
+      group = {
+        id: uid(),
+        category: state.selectedCategory || '하루',
+        theme: 'yellow',
+        label: '루틴',
+        title: '✅ 오늘의 루틴',
+        summaryEmoji: '✅',
+        isUngrouped: true,
+        items: []
+      };
+      b.routineGroups.unshift(group);
+    }
+    return group;
+  }
+
+  function buildOptionalGroupOptions(selectedId = ''){
+    const groups = currentBoard().routineGroups || [];
+    return `
+      <option value="__none__" ${selectedId === '__none__' ? 'selected' : ''}>그룹 없이 루틴만 추가</option>
+      ${groups.filter(group => !group.isUngrouped).map(group => `
+        <option value="${escapeHtml(group.id)}" ${group.id === selectedId ? 'selected' : ''}>
+          ${escapeHtml(group.title)} · ${escapeHtml(group.label)}
+        </option>
+      `).join('')}
+    `;
+  }
+
+
+  function openRoutineChoiceSheet(){
+    addSheetTitle.textContent = '추가하기';
+    addSheetDesc.textContent = `${getSelectedLabel()}에 추가할 항목을 선택해 주세요.`;
+    addSheetBody.innerHTML = `
+      <div class="action-list">
+        <button class="action-row" id="openGroupOnlySheet" type="button">
+          <span class="action-icon">🗂️</span>
+          <span><strong>그룹 만들기</strong><em>루틴을 담을 그룹만 먼저 만듭니다.</em></span>
+        </button>
+        <button class="action-row" id="openRoutineOnlySheet" type="button">
+          <span class="action-icon">✅</span>
+          <span><strong>루틴 만들기</strong><em>기존 방식대로 루틴을 추가합니다.</em></span>
+        </button>
+      </div>
+    `;
+
+    document.getElementById('openGroupOnlySheet').addEventListener('click', openGroupOnlySheet);
+    document.getElementById('openRoutineOnlySheet').addEventListener('click', openRoutineOnlySheet);
+    showAddSheet();
+  }
+
+  function openGroupOnlySheet(){
+    addSheetTitle.textContent = '그룹 만들기';
+    addSheetDesc.textContent = `${getSelectedLabel()}에 루틴 그룹을 만듭니다.`;
+    addSheetBody.innerHTML = `
+      <form class="form" id="groupOnlyForm">
+        <div class="two">
+          <div class="field">
+            <label>카테고리</label>
+            <select id="groupOnlyCategory" required>
+              ${state.categories.map(c => `<option value="${escapeHtml(c.label)}">${escapeHtml(c.label)}</option>`).join('')}
+            </select>
+          </div>
+          <div class="field">
+            <label>그룹 테마색</label>
+            <select id="groupOnlyTheme" required>
+              <option value="yellow">노랑</option>
+              <option value="purple">보라</option>
+              <option value="lime">연두</option>
+            </select>
+          </div>
+        </div>
+        <div class="field">
+          <label>그룹 제목</label>
+          <input id="groupOnlyTitle" placeholder="예: 모닝 루틴" required />
+        </div>
+        <div class="two">
+          <div class="field">
+            <label>왼쪽 라벨</label>
+            <input id="groupOnlyLabel" placeholder="예: 일어나자마자" required />
+          </div>
+          <div class="field">
+            <label>대표 이모지</label>
+            <input id="groupOnlyEmoji" placeholder="예: 🌞" value="🌞" />
+          </div>
+        </div>
+        <div class="footer-actions">
+          <button class="secondary-btn" type="button" data-close-add>취소</button>
+          <button class="primary-btn" type="submit">그룹 만들기</button>
+        </div>
+      </form>
+    `;
+
+    document.getElementById('groupOnlyCategory').value = state.selectedCategory;
+    document.getElementById('groupOnlyForm').addEventListener('submit', submitGroupOnlyForm);
+    showAddSheet();
+  }
+
+  function submitGroupOnlyForm(event){
+    event.preventDefault();
+
+    const category = document.getElementById('groupOnlyCategory').value;
+    const theme = document.getElementById('groupOnlyTheme').value;
+    const label = document.getElementById('groupOnlyLabel').value.trim();
+    const summaryEmoji = document.getElementById('groupOnlyEmoji').value.trim() || '🌞';
+    const groupTitle = document.getElementById('groupOnlyTitle').value.trim();
+
+    const group = {
+      id: uid(),
+      category,
+      theme,
+      label,
+      title: `${summaryEmoji} ${groupTitle}`,
+      summaryEmoji,
+      items: []
+    };
+
+    currentBoard().routineGroups.unshift(group);
+    state.selectedCategory = category;
+    saveData();
+    closeAddSheet();
+    render();
+    showToast('그룹을 만들었어요');
+  }
+
+
+
+  function openRoutineOnlySheet(editTarget = null){
+    state.editingRoutineTarget = editTarget;
+    const isEdit = !!editTarget;
+    let editGroup = null;
+    let editItem = null;
+
+    if (isEdit) {
+      editGroup = currentBoard().routineGroups.find(g => g.id === editTarget.groupId);
+      editItem = editGroup ? editGroup.items[editTarget.idx] : null;
+      if (!editGroup || !editItem) state.editingRoutineTarget = null;
+    }
+
+    addSheetTitle.textContent = state.editingRoutineTarget ? '루틴 수정' : '루틴 만들기';
+    addSheetDesc.textContent = state.editingRoutineTarget
+      ? `${getSelectedLabel()}의 루틴 항목을 수정합니다.`
+      : `${getSelectedLabel()}에 루틴만 추가합니다. 그룹 선택은 필수가 아니에요.`;
+
+    addSheetBody.innerHTML = `
+      <form class="form" id="routineOnlyForm">
+        <div class="field">
+          <label>그룹 선택</label>
+          <select id="routineOnlyGroup">
+            ${buildOptionalGroupOptions(editGroup ? (editGroup.isUngrouped ? '__none__' : editGroup.id) : '__none__')}
+          </select>
+        </div>
+        <div class="field">
+          <label>항목 시간/상황</label>
+          <input id="routineOnlyTime" placeholder="예: 07:20 또는 일어나자마자" required />
+        </div>
+        <div class="field">
+          <label>루틴 내용</label>
+          <input id="routineOnlyText" placeholder="예: 공복에 물 한 잔" required />
+        </div>
+        <div class="field">
+          <label>완료 시 표시 이모지</label>
+          <input id="routineOnlyEmoji" placeholder="예: 🥛" value="✅" />
+        </div>
+        <div class="footer-actions">
+          <button class="secondary-btn" type="button" data-close-add>취소</button>
+          <button class="primary-btn" type="submit">${state.editingRoutineTarget ? '루틴 저장하기' : '루틴 만들기'}</button>
+        </div>
+      </form>
+    `;
+
+    if (state.editingRoutineTarget && editItem) {
+      document.getElementById('routineOnlyTime').value = editItem.time || '';
+      document.getElementById('routineOnlyText').value = editItem.text || '';
+      document.getElementById('routineOnlyEmoji').value = editItem.emoji || '✅';
+    }
+
+    document.getElementById('routineOnlyForm').addEventListener('submit', submitRoutineOnlyForm);
+    showAddSheet();
+  }
+
+  function submitRoutineOnlyForm(event){
+    event.preventDefault();
+
+    const selectedGroupId = document.getElementById('routineOnlyGroup').value;
+    const time = document.getElementById('routineOnlyTime').value.trim();
+    const text = document.getElementById('routineOnlyText').value.trim();
+    const emoji = document.getElementById('routineOnlyEmoji').value.trim() || '✅';
+
+    let targetGroup = selectedGroupId === '__none__'
+      ? getOrCreateUngroupedRoutineGroup()
+      : currentBoard().routineGroups.find(g => g.id === selectedGroupId);
+
+    if (!targetGroup) {
+      targetGroup = getOrCreateUngroupedRoutineGroup();
+    }
+
+    if (state.editingRoutineTarget) {
+      const sourceGroup = currentBoard().routineGroups.find(g => g.id === state.editingRoutineTarget.groupId);
+      const sourceItem = sourceGroup ? sourceGroup.items[state.editingRoutineTarget.idx] : null;
+
+      if (sourceGroup && sourceItem) {
+        const updatedItem = {
+          ...sourceItem,
+          time,
+          text,
+          emoji
+        };
+
+        if (sourceGroup.id === targetGroup.id) {
+          sourceGroup.items[state.editingRoutineTarget.idx] = updatedItem;
+        } else {
+          sourceGroup.items.splice(state.editingRoutineTarget.idx, 1);
+          targetGroup.items.push(updatedItem);
+        }
+      }
+
+      state.editingRoutineTarget = null;
+      state.selectedCategory = targetGroup.category || state.selectedCategory;
+      saveData();
+      closeAddSheet();
+      closeRoutineAction();
+      render();
+      showToast('루틴을 수정했어요');
+      return;
+    }
+
+    targetGroup.items.push({
+      habitKey: uid(),
+      time,
+      text,
+      emoji,
+      checked: false
+    });
+
+    state.selectedCategory = targetGroup.category || state.selectedCategory;
+    saveData();
+    closeAddSheet();
+    render();
+    showToast('루틴을 만들었어요');
+  }
+
+
+  function openRoutineAddSheet(editTarget = null){
+    state.editingRoutineTarget = editTarget;
+    const isEdit = !!editTarget;
+    let editGroup = null;
+    let editItem = null;
+
+    if (isEdit) {
+      editGroup = currentBoard().routineGroups.find(g => g.id === editTarget.groupId);
+      editItem = editGroup ? editGroup.items[editTarget.idx] : null;
+      if (!editGroup || !editItem) {
+        state.editingRoutineTarget = null;
+      }
+    }
+
+    addSheetTitle.textContent = state.editingRoutineTarget ? '루틴 수정' : '루틴 추가';
+    addSheetDesc.textContent = state.editingRoutineTarget
+      ? `${getSelectedLabel()}의 루틴 항목을 수정합니다.`
+      : `${getSelectedLabel()}에 루틴을 추가합니다.`;
+
+    addSheetBody.innerHTML = `
+      <form class="form" id="routineForm">
+        <div class="two">
+          <div class="field">
+            <label>카테고리</label>
+            <select id="inputCategory" required>
+              ${state.categories.map(c => `<option value="${escapeHtml(c.label)}">${escapeHtml(c.label)}</option>`).join('')}
+            </select>
+          </div>
+          <div class="field">
+            <label>그룹 테마색</label>
+            <select id="inputTheme" required>
+              <option value="yellow">노랑</option>
+              <option value="purple">보라</option>
+              <option value="lime">연두</option>
+            </select>
+          </div>
+        </div>
+        <div class="field">
+          <label>그룹 제목</label>
+          <input id="inputGroupTitle" placeholder="예: 모닝 루틴" required />
+        </div>
+        <div class="two">
+          <div class="field">
+            <label>왼쪽 라벨</label>
+            <input id="inputGroupLabel" placeholder="예: 일어나자마자" required />
+          </div>
+          <div class="field">
+            <label>대표 이모지</label>
+            <input id="inputGroupEmoji" placeholder="예: 🌞" value="🌞" />
+          </div>
+        </div>
+        <div class="field">
+          <label>항목 시간/상황</label>
+          <input id="inputItemTime" placeholder="예: 07:20 또는 지하철 타면" required />
+        </div>
+        <div class="field">
+          <label>항목 내용</label>
+          <input id="inputItemText" placeholder="예: 공복에 물 한 잔" required />
+        </div>
+        <div class="field">
+          <label>완료 시 표시 이모지</label>
+          <input id="inputItemEmoji" placeholder="예: 🥛" value="✅" />
+        </div>
+        <div class="field">
+          <label>연속 성공 배지</label>
+          <div style="padding:14px;border:1px solid var(--line);background:#FAFBFC;border-radius:16px;color:var(--sub);font-size:14px;font-weight:650;line-height:1.5;">
+            불 배지는 직접 입력하지 않아도 됩니다. 첫 성공일에는 표시되지 않고, 다음 날 연속 성공부터 <strong style="color:var(--green-dark);font-weight:850;">🔥 1</strong>로 올라갑니다.
+          </div>
+        </div>
+        <div class="footer-actions">
+          <button class="secondary-btn" type="button" data-close-add>취소</button>
+          <button class="primary-btn" type="submit">${state.editingRoutineTarget ? '루틴 저장하기' : '루틴 추가하기'}</button>
+        </div>
+      </form>
+    `;
+
+    const categoryInput = document.getElementById('inputCategory');
+    const themeInput = document.getElementById('inputTheme');
+    const titleInput = document.getElementById('inputGroupTitle');
+    const labelInput = document.getElementById('inputGroupLabel');
+    const emojiInput = document.getElementById('inputGroupEmoji');
+    const timeInput = document.getElementById('inputItemTime');
+    const textInput = document.getElementById('inputItemText');
+    const itemEmojiInput = document.getElementById('inputItemEmoji');
+
+    if (state.editingRoutineTarget && editGroup && editItem) {
+      const summaryEmoji = editGroup.summaryEmoji || '🌞';
+      categoryInput.value = editGroup.category || '하루';
+      themeInput.value = editGroup.theme || 'yellow';
+      titleInput.value = editGroup.title && editGroup.title.startsWith(summaryEmoji + ' ')
+        ? editGroup.title.slice((summaryEmoji + ' ').length)
+        : editGroup.title || '';
+      labelInput.value = editGroup.label || '';
+      emojiInput.value = summaryEmoji;
+      timeInput.value = editItem.time || '';
+      textInput.value = editItem.text || '';
+      itemEmojiInput.value = editItem.emoji || '✅';
+    } else {
+      categoryInput.value = state.selectedCategory;
+    }
+
+    document.getElementById('routineForm').addEventListener('submit', submitRoutineForm);
+    showAddSheet();
+  }
+
+  function openTodoAddSheet(editIdx = null){
+    state.editingTodoTarget = Number.isInteger(editIdx) ? editIdx : null;
+    const editingTodo = state.editingTodoTarget !== null ? currentBoard().todos[state.editingTodoTarget] : null;
+
+    addSheetTitle.textContent = editingTodo ? '투두 수정' : '투두 추가';
+    addSheetDesc.textContent = editingTodo
+      ? `${getSelectedLabel()}의 투두를 수정합니다.`
+      : `${getSelectedLabel()}에 오늘만 할 일을 추가합니다.`;
+
+    addSheetBody.innerHTML = `
+      <form class="form" id="todoForm">
+        <div class="field">
+          <label>시간/상황</label>
+          <input id="todoTime" placeholder="예: 점심시간 또는 15:00" />
+        </div>
+        <div class="field">
+          <label>투두 내용</label>
+          <input id="todoText" placeholder="예: 병원 예약 전화하기" required />
+        </div>
+        <div class="field">
+          <label>완료 시 표시 이모지</label>
+          <input id="todoEmoji" placeholder="예: ✅" value="✅" />
+        </div>
+        <div class="footer-actions">
+          <button class="secondary-btn" type="button" data-close-add>취소</button>
+          <button class="primary-btn" type="submit">${editingTodo ? '투두 저장하기' : '투두 추가하기'}</button>
+        </div>
+        ${editingTodo ? `<button class="secondary-btn" style="margin-top:10px;background:#FFF0F0;color:#F04452;" id="deleteTodoInSheet" type="button">투두 삭제</button>` : ''}
+      </form>
+    `;
+
+    if (editingTodo) {
+      document.getElementById('todoTime').value = editingTodo.time || '';
+      document.getElementById('todoText').value = editingTodo.text || '';
+      document.getElementById('todoEmoji').value = editingTodo.emoji || '✅';
+      document.getElementById('deleteTodoInSheet').addEventListener('click', () => {
+        deleteTodo(state.editingTodoTarget, false);
+        closeAddSheet();
+      });
+    }
+
+    document.getElementById('todoForm').addEventListener('submit', submitTodoForm);
+    showAddSheet();
+  }
+
+  function submitRoutineForm(event){
+    event.preventDefault();
+
+    const category = document.getElementById('inputCategory').value;
+    const theme = document.getElementById('inputTheme').value;
+    const label = document.getElementById('inputGroupLabel').value.trim();
+    const summaryEmoji = document.getElementById('inputGroupEmoji').value.trim() || '🌞';
+    const groupTitle = document.getElementById('inputGroupTitle').value.trim();
+    const time = document.getElementById('inputItemTime').value.trim();
+    const text = document.getElementById('inputItemText').value.trim();
+    const itemEmoji = document.getElementById('inputItemEmoji').value.trim() || '✅';
+
+    if (state.editingRoutineTarget) {
+      const group = currentBoard().routineGroups.find(g => g.id === state.editingRoutineTarget.groupId);
+      const item = group ? group.items[state.editingRoutineTarget.idx] : null;
+
+      if (group && item) {
+        group.category = category;
+        group.theme = theme;
+        group.label = label;
+        group.summaryEmoji = summaryEmoji;
+        group.title = `${summaryEmoji} ${groupTitle}`;
+        item.time = time;
+        item.text = text;
+        item.emoji = itemEmoji;
+      }
+
+      state.selectedCategory = category;
+      state.editingRoutineTarget = null;
+      saveData();
+      closeAddSheet();
+      closeRoutineAction();
+      render();
+      showToast('루틴을 수정했어요');
+      return;
+    }
+
+    const b = currentBoard();
+    const group = {
+      id: uid(),
+      category,
+      theme,
+      label,
+      title: `${summaryEmoji} ${groupTitle}`,
+      summaryEmoji,
+      items: [{
+        habitKey: uid(),
+        time,
+        text,
+        emoji: itemEmoji,
+        checked: false
+      }]
+    };
+
+    b.routineGroups.unshift(group);
+    state.selectedCategory = group.category;
+    saveData();
+    closeAddSheet();
+    render();
+    showToast('루틴을 추가했어요');
+  }
+
+  function submitTodoForm(event){
+    event.preventDefault();
+    const b = currentBoard();
+    const time = document.getElementById('todoTime').value.trim();
+    const text = document.getElementById('todoText').value.trim();
+    const emoji = document.getElementById('todoEmoji').value.trim() || '✅';
+
+    if (state.editingTodoTarget !== null) {
+      const todo = b.todos[state.editingTodoTarget];
+      if (todo) {
+        todo.time = time;
+        todo.text = text;
+        todo.emoji = emoji;
+      }
+      state.editingTodoTarget = null;
+      saveData();
+      closeAddSheet();
+      render();
+      showToast('투두를 수정했어요');
+      return;
+    }
+
+    b.todos.unshift({
+      id: uid(),
+      time,
+      text,
+      emoji,
+      done: false
+    });
+    saveData();
+    closeAddSheet();
+    render();
+    showToast('투두를 추가했어요');
+  }
+
+  function deleteTodo(idx, askConfirm = true){
+    if (askConfirm && !confirm('이 투두를 삭제할까요?')) return;
+    currentBoard().todos.splice(idx, 1);
+    state.editingTodoTarget = null;
+    saveData();
+    render();
+    showToast('투두를 삭제했어요');
+  }
+
+  function toggleRoutine(groupId, idx){
+    const group = currentBoard().routineGroups.find(g => g.id === groupId);
+    if (!group) return;
+    group.items[idx].checked = !group.items[idx].checked;
+    saveData();
+    render();
+  }
+
+  function toggleTodo(idx){
+    const todos = currentBoard().todos;
+    todos[idx].done = !todos[idx].done;
+    saveData();
+    render();
+  }
+
+  function openRoutineAction(groupId, idx){
+    const group = currentBoard().routineGroups.find(g => g.id === groupId);
+    if (!group) return;
+    const item = group.items[idx];
+    if (!item) return;
+
+    if (isWeightRoutine(item)) {
+      openWeightPopup(groupId, idx);
+      return;
+    }
+
+    state.selectedRoutineAction = { groupId, idx };
+    document.getElementById('actionTime').textContent = item.time || '루틴';
+    document.getElementById('actionTitle').textContent = item.text || '루틴 항목';
+    actionBackdrop.classList.add('show');
+    actionSheet.classList.add('show');
+  }
+
+  function closeRoutineAction(){
+    actionBackdrop.classList.remove('show');
+    actionSheet.classList.remove('show');
+    state.selectedRoutineAction = null;
+  }
+
+
+  function openWeightPopup(groupId, idx){
+    const group = currentBoard().routineGroups.find(g => g.id === groupId);
+    if (!group) return;
+    const item = group.items[idx];
+    if (!item) return;
+
+    state.selectedWeightTarget = { groupId, idx };
+    weightDateLabel.textContent = `${getSelectedLabel()} 몸무게를 기록합니다.`;
+    weightInput.value = getWeightValue(item);
+    weightBackdrop.classList.add('show');
+    weightPopup.classList.add('show');
+
+    setTimeout(() => {
+      weightInput.focus();
+      weightInput.select();
+    }, 80);
+  }
+
+  function closeWeightPopup(){
+    weightBackdrop.classList.remove('show');
+    weightPopup.classList.remove('show');
+    state.selectedWeightTarget = null;
+  }
+
+  function saveWeightValue(){
+    const target = state.selectedWeightTarget;
+    if (!target) return;
+
+    const group = currentBoard().routineGroups.find(g => g.id === target.groupId);
+    if (!group) return;
+
+    const item = group.items[target.idx];
+    if (!item) return;
+
+    const value = String(weightInput.value || '').trim();
+    if (!value) {
+      showToast('몸무게를 입력해 주세요');
+      return;
+    }
+
+    if (!state.weightLogs[state.selectedDateKey]) {
+      state.weightLogs[state.selectedDateKey] = {};
+    }
+
+    state.weightLogs[state.selectedDateKey][weightKeyForItem(item)] = `${value}kg`;
+    item.checked = true;
+
+    saveData();
+    closeWeightPopup();
+    render();
+    showToast('몸무게를 기록했어요');
+  }
+
+
+  function editSelectedRoutine(){
+    if (!state.selectedRoutineAction) return;
+
+    const target = {
+      groupId: state.selectedRoutineAction.groupId,
+      idx: state.selectedRoutineAction.idx
+    };
+
+    actionBackdrop.classList.remove('show');
+    actionSheet.classList.remove('show');
+    state.selectedRoutineAction = null;
+
+    setTimeout(() => {
+      openRoutineOnlySheet(target);
+    }, 80);
+  }
+
+  function selectedRoutine(){
+    const action = state.selectedRoutineAction;
+    if (!action) return null;
+    const group = currentBoard().routineGroups.find(g => g.id === action.groupId);
+    if (!group) return null;
+    const item = group.items[action.idx];
+    if (!item) return null;
+    return { group, item, idx: action.idx };
+  }
+
+  function cloneGroupShell(group){
+    return {
+      id: uid(),
+      category: group.category,
+      theme: group.theme,
+      label: group.label,
+      title: group.title,
+      summaryEmoji: group.summaryEmoji,
+      items: []
+    };
+  }
+
+  function cloneItem(item){
+    return {
+      habitKey: item.habitKey || uid(),
+      time: item.time,
+      text: item.text,
+      emoji: item.emoji || '✅',
+      checked: false
+    };
+  }
+
+  function addRoutineToDate(dateKey, sourceGroup, sourceItem){
+    const target = ensureBoard(dateKey);
+    let group = target.routineGroups.find(g =>
+      g.category === sourceGroup.category &&
+      g.label === sourceGroup.label &&
+      g.title === sourceGroup.title
+    );
+    if (!group) {
+      group = cloneGroupShell(sourceGroup);
+      target.routineGroups.push(group);
+    }
+
+    const exists = group.items.some(item =>
+      item.habitKey === sourceItem.habitKey ||
+      (item.time === sourceItem.time && item.text === sourceItem.text)
+    );
+    if (!exists) group.items.push(cloneItem(sourceItem));
+  }
+
+  function actionTomorrow(){
+    const selected = selectedRoutine();
+    if (!selected) return;
+    const d = dateFromKey(state.selectedDateKey);
+    d.setDate(d.getDate() + 1);
+    addRoutineToDate(formatDateKey(d), selected.group, selected.item);
+    saveData();
+    closeRoutineAction();
+    showToast('내일 일정에도 추가했어요');
+  }
+
+  function actionRepeat(mode){
+    const selected = selectedRoutine();
+    if (!selected) return;
+
+    state.weekDays.forEach(day => {
+      const d = dateFromKey(day.key);
+      const jsDay = d.getDay();
+      const weekday = jsDay >= 1 && jsDay <= 5;
+      if (mode === 'weekday' && !weekday) return;
+      addRoutineToDate(day.key, selected.group, selected.item);
+    });
+
+    saveData();
+    closeRoutineAction();
+    showToast(mode === 'weekday' ? '평일 반복으로 추가했어요' : '이번 주 반복으로 추가했어요');
+  }
+
+  function actionDeleteRoutine(){
+    const selected = selectedRoutine();
+    if (!selected) return;
+    selected.group.items.splice(selected.idx, 1);
+    if (selected.group.items.length === 0) {
+      currentBoard().routineGroups = currentBoard().routineGroups.filter(g => g.id !== selected.group.id);
+    }
+    saveData();
+    closeRoutineAction();
+    render();
+    showToast('루틴을 삭제했어요');
+  }
+
+
+  function switchView(view){
+    state.majorView = 'home';
+    state.view = view;
+    saveData();
+    render();
+  }
+
+  function showToast(text){
+    toast.textContent = text;
+    toast.classList.add('show');
+    clearTimeout(toast.timer);
+    toast.timer = setTimeout(() => toast.classList.remove('show'), 1500);
+  }
+
+  function escapeHtml(text){
+    return String(text ?? '')
+      .replaceAll('&','&amp;')
+      .replaceAll('<','&lt;')
+      .replaceAll('>','&gt;')
+      .replaceAll('"','&quot;')
+      .replaceAll("'","&#039;");
+  }
+
+  document.addEventListener('click', (e) => {
+    const bottomNavTarget = e.target.closest('[data-bottom-nav]');
+    if (bottomNavTarget) {
+      switchBottomNav(bottomNavTarget.dataset.bottomNav);
+      return;
+    }
+
+    const statsMonthTarget = e.target.closest('[data-stats-month]');
+    if (statsMonthTarget) {
+      moveStatsMonth(Number(statsMonthTarget.dataset.statsMonth));
+      return;
+    }
+
+    const dateTarget = e.target.closest('[data-date]');
+    if (dateTarget) {
+      state.selectedDateKey = dateTarget.dataset.date;
+      state.selectedCategory = '하루';
+      state.view = 'routine';
+      ensureBoard();
+      saveData();
+      render();
+      return;
+    }
+
+    const calendarDateTarget = e.target.closest('[data-calendar-date]');
+    if (calendarDateTarget) {
+      selectDate(calendarDateTarget.dataset.calendarDate);
+      return;
+    }
+
+    const categoryTarget = e.target.closest('[data-category]');
+    if (categoryTarget) {
+      state.selectedCategory = categoryTarget.dataset.category;
+      render();
+      return;
+    }
+
+    const viewTarget = e.target.closest('[data-view]');
+    if (viewTarget) {
+      switchView(viewTarget.dataset.view);
+      return;
+    }
+
+    const openRoutineTarget = e.target.closest('[data-open-routine]');
+    if (openRoutineTarget) {
+      openRoutineAction(openRoutineTarget.dataset.groupId, Number(openRoutineTarget.dataset.openRoutine));
+      return;
+    }
+
+    const checkRoutineTarget = e.target.closest('[data-check-routine]');
+    if (checkRoutineTarget) {
+      toggleRoutine(checkRoutineTarget.dataset.groupId, Number(checkRoutineTarget.dataset.checkRoutine));
+      return;
+    }
+
+    const checkTodoTarget = e.target.closest('[data-check-todo]');
+    if (checkTodoTarget) {
+      toggleTodo(Number(checkTodoTarget.dataset.checkTodo));
+      return;
+    }
+
+    const editTodoTarget = e.target.closest('[data-edit-todo]');
+    if (editTodoTarget) {
+      openTodoAddSheet(Number(editTodoTarget.dataset.editTodo));
+      return;
+    }
+
+    const closeAddTarget = e.target.closest('[data-close-add]');
+    if (closeAddTarget) {
+      closeAddSheet();
+    }
+  });
+
+  document.getElementById('openCalendar').addEventListener('click', (e) => {
+    e.preventDefault();
+    if (state.majorView !== 'home') return;
+    openCalendarSheet();
+  });
+  document.getElementById('calendarPrev').addEventListener('click', () => moveCalendarMonth(-1));
+  document.getElementById('calendarNext').addEventListener('click', () => moveCalendarMonth(1));
+  document.getElementById('calendarToday').addEventListener('click', goToday);
+  calendarBackdrop.addEventListener('click', closeCalendarSheet);
+
+  document.getElementById('openAddSheet').addEventListener('click', openAddSheet);
+  document.getElementById('closeAddSheet').addEventListener('click', closeAddSheet);
+  addBackdrop.addEventListener('click', closeAddSheet);
+
+  document.getElementById('closeWeightPopup').addEventListener('click', closeWeightPopup);
+  document.getElementById('cancelWeight').addEventListener('click', closeWeightPopup);
+  document.getElementById('saveWeight').addEventListener('click', saveWeightValue);
+  weightBackdrop.addEventListener('click', closeWeightPopup);
+  weightInput.addEventListener('keydown', (e) => {
+    if (e.key === 'Enter') saveWeightValue();
+  });
+
+  document.getElementById('closeActionSheet').addEventListener('click', closeRoutineAction);
+  actionBackdrop.addEventListener('click', closeRoutineAction);
+  document.getElementById('actionEdit').addEventListener('click', editSelectedRoutine);
+  document.getElementById('actionTomorrow').addEventListener('click', actionTomorrow);
+  document.getElementById('actionRepeatWeek').addEventListener('click', () => actionRepeat('week'));
+  document.getElementById('actionRepeatWeekday').addEventListener('click', () => actionRepeat('weekday'));
+  document.getElementById('actionDelete').addEventListener('click', actionDeleteRoutine);
+
+  loadData();
+  ensureBoard();
+  render();
+
+  (function makeIcon(){
+    const svg = `
+      <svg xmlns="http://www.w3.org/2000/svg" width="180" height="180" viewBox="0 0 180 180">
+        <defs>
+          <linearGradient id="g" x1="18" y1="12" x2="162" y2="168">
+            <stop offset="0" stop-color="#24C47A"/>
+            <stop offset="0.62" stop-color="#7AD5AA"/>
+            <stop offset="1" stop-color="#EAF7F1"/>
+          </linearGradient>
+        </defs>
+        <rect width="180" height="180" rx="42" fill="url(#g)"/>
+        <rect x="29" y="38" width="122" height="104" rx="24" fill="#fff" opacity=".95"/>
+        <rect x="42" y="56" width="30" height="30" rx="15" fill="#62CB7A"/>
+        <rect x="80" y="56" width="30" height="30" rx="15" fill="#F4C644"/>
+        <rect x="118" y="56" width="30" height="30" rx="15" fill="#D6DCE3"/>
+        <rect x="43" y="101" width="84" height="14" rx="7" fill="#E8F7F0"/>
+        <rect x="43" y="123" width="52" height="14" rx="7" fill="#F2F4F6"/>
+        <rect x="104" y="123" width="34" height="14" rx="7" fill="#E8F7F0"/>
+      </svg>
+    `;
+    const href = 'data:image/svg+xml;base64,' + btoa(unescape(encodeURIComponent(svg)));
+    const apple = document.createElement('link');
+    apple.rel = 'apple-touch-icon';
+    apple.href = href;
+    document.head.appendChild(apple);
+    const icon = document.createElement('link');
+    icon.rel = 'icon';
+    icon.href = href;
+    document.head.appendChild(icon);
+  })();
+})();
+</script>
+</body>
+</html>

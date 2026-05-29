@@ -812,9 +812,10 @@ function renderRoutines(el){
 function renderGC(g){
   const its=g.items||[];
   const done=its.filter(i=>i.checked).length;
+  const leftIcon=S.sortMode?'↕':'▼';
   return`<div class="gc ${thC(g.theme)}" data-gid="${e(g.id)}" draggable="true">
     <div class="gc-hdr">
-      <div class="gc-hdr-toggle" data-tog="${e(g.id)}">▼</div>
+      <div class="gc-hdr-toggle" data-tog="${e(g.id)}" title="${S.sortMode?'드래그해서 그룹 순서 변경':'접기/펼치기'}">${leftIcon}</div>
       <div class="gc-hdr-mid" data-grp-act="${e(g.id)}">
         <div class="gc-hdr-label">${e(g.label||'')}</div>
         <div class="gc-hdr-title">${e(g.title||'')}</div>
@@ -1112,8 +1113,8 @@ function buildChoice(){
     <button class="act-row" id="c-grp"><span class="act-ico">🗂️</span><span><span class="act-ttl">그룹 만들기</span><span class="act-desc">루틴을 담을 그룹을 만듭니다.</span></span></button>
     <button class="act-row" id="c-item"><span class="act-ico">✅</span><span><span class="act-ttl">루틴 항목 추가</span><span class="act-desc">기존 그룹에 항목을 추가합니다.</span></span></button>
   </div>`;
-  document.getElementById('c-grp').onclick=()=>buildGrpForm();
-  document.getElementById('c-item').onclick=()=>buildItemForm();
+  document.getElementById('c-grp').onclick=ev=>{ev.stopPropagation();buildGrpForm();};
+  document.getElementById('c-item').onclick=ev=>{ev.stopPropagation();buildItemForm();};
 }
 
 const catOpts=()=>S.cats.map(c=>`<option value="${e(c.l)}">${e(c.l)}</option>`).join('');
@@ -1122,7 +1123,7 @@ function buildGrpForm(egid){
   const grp=egid?curB().groups.find(x=>x.id===egid):null;
   document.getElementById('addTitle').textContent=grp?'그룹 수정':'그룹 만들기';
   document.getElementById('addSub').textContent='';
-  document.getElementById('addBody').innerHTML=`<form class="form" id="gf">
+  document.getElementById('addBody').innerHTML=`<div class="form" id="gf">
     <div class="row2">
       <div class="fld"><label>카테고리</label><select id="g-cat">${catOpts()}</select></div>
       <div class="fld"><label>테마</label><select id="g-thm">
@@ -1132,29 +1133,30 @@ function buildGrpForm(egid){
         <option value="green"${grp?.theme==='green'?' selected':''}>💚 초록</option>
       </select></div>
     </div>
-    <div class="fld"><label>왼쪽 라벨</label><input id="g-lbl" placeholder="예: 눈 뜨면" value="${e(grp?.label||'')}" required/></div>
-    <div class="row2">
-      <div class="fld"><label>그룹 제목</label><input id="g-ttl" placeholder="모닝 루틴" value="${e(grp?grp.title.replace(/^.\s/,''):grp?.title||'')}" required/></div>
-      <div class="fld"><label>대표 이모지</label><input id="g-emo" placeholder="🌞" value="${e(grp?.emoji||'🌞')}"/></div>
+    <div class="fld"><label>왼쪽 라벨</label><input id="g-lbl" placeholder="예: 눈 뜨면" value="${e(grp?.label||'')}"/></div>
+    <div style="display:grid;grid-template-columns:1fr 68px;gap:9px;">
+      <div class="fld"><label>그룹 제목</label><input id="g-ttl" placeholder="모닝 루틴" value="${e(grp?grp.title.replace(/^.\s/,''):grp?.title||'')}"/></div>
+      <div class="fld"><label>이모지</label><input id="g-emo" placeholder="🌞" value="${e(grp?.emoji||'🌞')}" style="text-align:center;padding-left:6px;padding-right:6px;font-size:20px;"/></div>
     </div>
     <div class="fbtns">
       <button class="btn btn-ghost" type="button" data-ca>취소</button>
-      <button class="btn btn-primary" type="submit">${grp?'저장':'만들기'}</button>
+      <button class="btn btn-primary" type="button" id="g-save">${grp?'저장':'만들기'}</button>
     </div>
     ${grp?`<button class="btn btn-danger" type="button" data-dgf="${e(grp.id)}">그룹 삭제</button>`:''}
-  </form>`;
-  document.getElementById('g-cat').value=grp?.category||S.cat==='__all__'?'하루':S.cat;
-  document.getElementById('gf').onsubmit=ev=>{
-    ev.preventDefault();
+  </div>`;
+  document.getElementById('g-cat').value=grp?.category||(S.cat==='__all__'?'하루':S.cat)||'하루';
+  document.getElementById('g-save').addEventListener('click',()=>{
     const cat=document.getElementById('g-cat').value;
     const thm=document.getElementById('g-thm').value;
     const lbl=document.getElementById('g-lbl').value.trim();
-    const emo=document.getElementById('g-emo').value.trim()||'✅';
-    const ttl=`${emo} ${document.getElementById('g-ttl').value.trim()}`;
+    const ttlRaw=document.getElementById('g-ttl').value.trim();
+    const emo=document.getElementById('g-emo').value.trim()||'🌞';
+    if(!ttlRaw){toast('그룹 제목을 입력해주세요');return;}
+    const ttl=`${emo} ${ttlRaw}`;
     if(grp){Object.assign(grp,{category:cat,theme:thm,label:lbl,title:ttl,emoji:emo});}
-    else{curB().groups.unshift({id:g(),category:cat,theme:thm,label:lbl,title:ttl,emoji:emo,items:[]});if(S.cat!=='__all__')S.cat=cat;}
+    else{curB().groups.unshift({id:g(),category:cat,theme:thm,label:lbl||'루틴',title:ttl,emoji:emo,items:[]});if(S.cat!=='__all__')S.cat=cat;}
     save();cs('addBd','addSheet');render();toast(grp?'그룹 수정됐어요':'그룹 만들었어요');
-  };
+  });
 }
 
 function buildItemForm(egid,eidx){
@@ -1162,7 +1164,7 @@ function buildItemForm(egid,eidx){
   const it=egid!=null?gs.find(x=>x.id===egid)?.items[eidx]:null;
   document.getElementById('addTitle').textContent=it?'루틴 수정':'루틴 항목 추가';
   document.getElementById('addSub').textContent='';
-  document.getElementById('addBody').innerHTML=`<form class="form" id="itf">
+  document.getElementById('addBody').innerHTML=`<div class="form" id="itf">
     <div class="fld"><label>그룹</label><select id="i-gid">
       <option value="__new__">+ 새 그룹 자동 생성</option>
       ${gs.map(x=>`<option value="${e(x.id)}"${x.id===egid?' selected':''}>${e(x.title)}</option>`).join('')}
@@ -1171,30 +1173,30 @@ function buildItemForm(egid,eidx){
       <option value="normal"${it?.rtype!=='weight'?' selected':''}>일반 루틴</option>
       <option value="weight"${it?.rtype==='weight'?' selected':''}>⚖️ 몸무게 기록</option>
     </select></div>
-    <div class="row2">
-      <div class="fld"><label>시간/상황</label><input id="i-time" placeholder="예: 07:20" value="${e(it?.time||'')}" required/></div>
-      <div class="fld"><label>완료 이모지</label><input id="i-emo" placeholder="✅" value="${e(it?.emoji||'✅')}"/></div>
+    <div style="display:grid;grid-template-columns:1fr 68px;gap:9px;">
+      <div class="fld"><label>시간/상황</label><input id="i-time" placeholder="예: 07:20" value="${e(it?.time||'')}"/></div>
+      <div class="fld"><label>이모지</label><input id="i-emo" placeholder="✅" value="${e(it?.emoji||'✅')}" style="text-align:center;padding-left:6px;padding-right:6px;font-size:20px;"/></div>
     </div>
-    <div class="fld"><label>내용</label><input id="i-text" placeholder="예: 공복에 물 한 잔" value="${e(it?.text||'')}" required/></div>
+    <div class="fld"><label>내용</label><input id="i-text" placeholder="예: 공복에 물 한 잔" value="${e(it?.text||'')}"/></div>
     <div class="fbtns">
       <button class="btn btn-ghost" type="button" data-ca>취소</button>
-      <button class="btn btn-primary" type="submit">${it?'저장':'추가'}</button>
+      <button class="btn btn-primary" type="button" id="i-save">${it?'저장':'추가'}</button>
     </div>
     ${it?`<button class="btn btn-danger" type="button" data-dif="${e(egid)}" data-dii="${eidx}">항목 삭제</button>`:''}
-  </form>`;
+  </div>`;
   document.getElementById('i-type').addEventListener('change',ev=>{
     if(ev.target.value==='weight'){
       const t=document.getElementById('i-time'),tx=document.getElementById('i-text'),em=document.getElementById('i-emo');
       if(!t.value)t.value='07:20';if(!tx.value)tx.value='몸무게 기록';em.value='🧡';
     }
   });
-  document.getElementById('itf').onsubmit=ev=>{
-    ev.preventDefault();
+  document.getElementById('i-save').addEventListener('click',()=>{
     const gid=document.getElementById('i-gid').value;
     const rtype=document.getElementById('i-type').value==='weight'?'weight':undefined;
     const time=document.getElementById('i-time').value.trim();
     const txt=document.getElementById('i-text').value.trim();
     const emo=document.getElementById('i-emo').value.trim()||'✅';
+    if(!txt){toast('내용을 입력해주세요');return;}
     const b=curB();
     let tg=gid==='__new__'?null:b.groups.find(x=>x.id===gid);
     if(!tg){tg={id:g(),category:S.cat==='__all__'?'하루':S.cat,theme:'yellow',label:'루틴',title:'✅ 루틴',emoji:'✅',items:[]};b.groups.unshift(tg);}
@@ -1205,32 +1207,72 @@ function buildItemForm(egid,eidx){
       if(sg){if(sg.id===tg.id){sg.items[eidx]=ni;}else{sg.items.splice(eidx,1);tg.items.push(ni);}}
     }else tg.items.push(ni);
     save();cs('addBd','addSheet');cs('actBd','actSheet');render();toast(it?'루틴 수정됐어요':'루틴 추가됐어요');
-  };
+  });
 }
 
 function buildTdForm(eidx){
   const td=eidx!=null?curB().todos[eidx]:null;
   document.getElementById('addTitle').textContent=td?'투두 수정':'투두 추가';
   document.getElementById('addSub').textContent='';
-  document.getElementById('addBody').innerHTML=`<form class="form" id="tdf">
-    <div class="fld"><label>시간/상황</label><input id="td-t" placeholder="예: 15:00" value="${e(td?.time||'')}"/></div>
-    <div class="fld"><label>내용</label><input id="td-x" placeholder="예: 병원 예약" value="${e(td?.text||'')}" required/></div>
-    <div class="fld"><label>완료 이모지</label><input id="td-e" placeholder="✅" value="${e(td?.emoji||'✅')}"/></div>
+  document.getElementById('addBody').innerHTML=`<div class="form" id="tdf">
+    <div style="display:grid;grid-template-columns:1fr 68px;gap:9px;">
+      <div class="fld"><label>시간/상황</label><input id="td-t" placeholder="예: 15:00" value="${e(td?.time||'')}"/></div>
+      <div class="fld"><label>이모지</label><input id="td-e" placeholder="✅" value="${e(td?.emoji||'✅')}" style="text-align:center;padding-left:6px;padding-right:6px;font-size:20px;"/></div>
+    </div>
+    <div class="fld"><label>내용</label><input id="td-x" placeholder="예: 병원 예약" value="${e(td?.text||'')}"/></div>
     <div class="fbtns">
       <button class="btn btn-ghost" type="button" data-ca>취소</button>
-      <button class="btn btn-primary" type="submit">${td?'저장':'추가'}</button>
+      <button class="btn btn-primary" type="button" id="td-save">${td?'저장':'추가'}</button>
     </div>
     ${td?`<button class="btn btn-danger" type="button" data-dtd="${eidx}">투두 삭제</button>`:''}
-  </form>`;
-  document.getElementById('tdf').onsubmit=ev=>{
-    ev.preventDefault();
+  </div>`;
+  document.getElementById('td-save').addEventListener('click',()=>{
     const time=document.getElementById('td-t').value.trim();
     const txt=document.getElementById('td-x').value.trim();
     const emo=document.getElementById('td-e').value.trim()||'✅';
+    if(!txt){toast('내용을 입력해주세요');return;}
     if(td){curB().todos[eidx]={...td,time,text:txt,emoji:emo};}
     else curB().todos.unshift({id:g(),time,text:txt,emoji:emo,done:false});
     save();cs('addBd','addSheet');render();toast(td?'투두 수정됐어요':'투두 추가됐어요');
-  };
+  });
+}
+
+
+function visibleGroups(){
+  const b=curB();
+  if(S.cat==='__all__')return b.groups;
+  if(S.cat==='하루')return b.groups.filter(g=>!g.category||g.category==='하루');
+  return b.groups.filter(g=>g.category===S.cat);
+}
+
+function moveGroup(gid,dir){
+  const b=curB();
+  const vis=visibleGroups().map(g=>g.id);
+  const vi=vis.indexOf(gid);
+  if(vi<0)return false;
+  const targetId=vis[vi+dir];
+  if(!targetId)return false;
+
+  const from=b.groups.findIndex(g=>g.id===gid);
+  if(from<0)return false;
+  const [moved]=b.groups.splice(from,1);
+  const targetNow=b.groups.findIndex(g=>g.id===targetId);
+  if(targetNow<0){b.groups.splice(from,0,moved);return false;}
+
+  b.groups.splice(dir>0?targetNow+1:targetNow,0,moved);
+  save();render();
+  return true;
+}
+
+function moveItem(gid,idx,dir){
+  const grp=curB().groups.find(g=>g.id===gid);
+  if(!grp||!grp.items)return false;
+  const ni=idx+dir;
+  if(idx<0||ni<0||ni>=grp.items.length)return false;
+  const [moved]=grp.items.splice(idx,1);
+  grp.items.splice(ni,0,moved);
+  save();render();
+  return true;
 }
 
 /* ── ACTION SHEET ── */
@@ -1243,12 +1285,22 @@ function openItemAct(gid,idx){
   document.getElementById('actList').innerHTML=`
     ${isW(it)?`<button class="act-row" id="a-wgt"><span class="act-ico">⚖️</span><span><span class="act-ttl">몸무게 등록</span><span class="act-desc">이 날짜 몸무게를 기록합니다.</span></span></button>`:''}
     <button class="act-row" id="a-edt"><span class="act-ico">✏️</span><span><span class="act-ttl">수정</span><span class="act-desc">루틴 내용과 시간을 수정합니다.</span></span></button>
+    <button class="act-row" id="a-up"><span class="act-ico">⬆️</span><span><span class="act-ttl">위로 이동</span><span class="act-desc">이 그룹 안에서 한 칸 위로 올립니다.</span></span></button>
+    <button class="act-row" id="a-down"><span class="act-ico">⬇️</span><span><span class="act-ttl">아래로 이동</span><span class="act-desc">이 그룹 안에서 한 칸 아래로 내립니다.</span></span></button>
     <button class="act-row" id="a-tmr"><span class="act-ico">🌤️</span><span><span class="act-ttl">내일도 추가</span><span class="act-desc">같은 루틴을 내일 보드에 복사합니다.</span></span></button>
     <button class="act-row" id="a-wk"><span class="act-ico">🔁</span><span><span class="act-ttl">이번 주 반복</span><span class="act-desc">이번 주 날짜들에 반복 추가합니다.</span></span></button>
     <button class="act-row" id="a-wkd"><span class="act-ico">🏢</span><span><span class="act-ttl">평일 반복</span><span class="act-desc">월~금에 반복 추가합니다.</span></span></button>
     <button class="act-row danger" id="a-del"><span class="act-ico">🗑️</span><span><span class="act-ttl">항목 삭제</span><span class="act-desc">이 항목을 삭제합니다.</span></span></button>`;
   if(isW(it))document.getElementById('a-wgt').onclick=()=>{cs('actBd','actSheet');setTimeout(()=>openWgt(gid,idx),80);};
   document.getElementById('a-edt').onclick=()=>{cs('actBd','actSheet');setTimeout(()=>{buildItemForm(gid,idx);os('addBd','addSheet');},80);};
+  document.getElementById('a-up').onclick=()=>{
+    if(!moveItem(gid,idx,-1)){toast('이미 맨 위 항목이에요');return;}
+    cs('actBd','actSheet');toast('위로 이동했어요');
+  };
+  document.getElementById('a-down').onclick=()=>{
+    if(!moveItem(gid,idx,1)){toast('이미 맨 아래 항목이에요');return;}
+    cs('actBd','actSheet');toast('아래로 이동했어요');
+  };
   document.getElementById('a-tmr').onclick=()=>rptDate(gid,idx,1);
   document.getElementById('a-wk').onclick=()=>rptRange(gid,idx,'wk');
   document.getElementById('a-wkd').onclick=()=>rptRange(gid,idx,'wkd');
@@ -1268,9 +1320,19 @@ function openGrpAct(gid){
   document.getElementById('actList').innerHTML=`
     <button class="act-row" id="ga-add"><span class="act-ico">＋</span><span><span class="act-ttl">항목 추가</span><span class="act-desc">이 그룹에 루틴 항목을 추가합니다.</span></span></button>
     <button class="act-row" id="ga-edt"><span class="act-ico">✏️</span><span><span class="act-ttl">그룹 수정</span><span class="act-desc">라벨·제목·테마를 수정합니다.</span></span></button>
+    <button class="act-row" id="ga-up"><span class="act-ico">⬆️</span><span><span class="act-ttl">그룹 위로 이동</span><span class="act-desc">현재 카테고리 안에서 한 칸 위로 올립니다.</span></span></button>
+    <button class="act-row" id="ga-down"><span class="act-ico">⬇️</span><span><span class="act-ttl">그룹 아래로 이동</span><span class="act-desc">현재 카테고리 안에서 한 칸 아래로 내립니다.</span></span></button>
     <button class="act-row danger" id="ga-del"><span class="act-ico">🗑️</span><span><span class="act-ttl">그룹 삭제</span><span class="act-desc">이 그룹과 항목 전체를 삭제합니다.</span></span></button>`;
   document.getElementById('ga-add').onclick=()=>{cs('actBd','actSheet');setTimeout(()=>{buildItemForm(gid,null);os('addBd','addSheet');},80);};
   document.getElementById('ga-edt').onclick=()=>{cs('actBd','actSheet');setTimeout(()=>{buildGrpForm(gid);os('addBd','addSheet');},80);};
+  document.getElementById('ga-up').onclick=()=>{
+    if(!moveGroup(gid,-1)){toast('이미 맨 위 그룹이에요');return;}
+    cs('actBd','actSheet');toast('그룹을 위로 이동했어요');
+  };
+  document.getElementById('ga-down').onclick=()=>{
+    if(!moveGroup(gid,1)){toast('이미 맨 아래 그룹이에요');return;}
+    cs('actBd','actSheet');toast('그룹을 아래로 이동했어요');
+  };
   document.getElementById('ga-del').onclick=()=>{
     if(!confirm('그룹 전체를 삭제할까요?'))return;
     curB().groups=curB().groups.filter(x=>x.id!==gid);
@@ -1363,6 +1425,7 @@ document.addEventListener('click',ev=>{
   // toggle collapse
   const tog=t.closest('[data-tog]');
   if(tog){
+    if(S.sortMode){toast('정렬 모드에서는 그룹 핸들을 드래그해서 이동하세요');return;}
     const gid=tog.dataset.tog;
     const wrap=document.querySelector(`.items-wrap[data-gid="${CSS.escape(gid)}"]`);
     if(wrap){const h=wrap.style.display==='none';wrap.style.display=h?'':'none';tog.textContent=h?'▼':'▶';}
@@ -1425,7 +1488,7 @@ document.getElementById('sortHint').addEventListener('click',()=>{
       banner=document.createElement('div');
       banner.id='sortBanner';
       banner.className='sort-mode-banner';
-      banner.textContent='↕ 정렬 모드 — 숫자/▼ 를 잡고 드래그해서 순서 변경';
+      banner.textContent='↕ 정렬 모드 — 그룹은 왼쪽 ↕, 항목은 숫자를 잡고 드래그해서 순서 변경';
       document.getElementById('board').before(banner);
     }
   }else{
@@ -1435,7 +1498,7 @@ document.getElementById('sortHint').addEventListener('click',()=>{
   const btn=document.getElementById('sortHint');
   btn.style.color=S.sortMode?'var(--green-dark)':'';
   btn.style.background=S.sortMode?'var(--green-bg)':'';
-  toast(S.sortMode?'정렬 모드 ON — 숫자를 드래그해서 순서를 바꾸세요':'정렬 모드 OFF');
+  toast(S.sortMode?'정렬 모드 ON — 그룹 ↕ / 항목 숫자를 드래그하세요':'정렬 모드 OFF');
 });
 
 load();render();

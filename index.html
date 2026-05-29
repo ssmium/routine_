@@ -652,7 +652,7 @@ body:not(.sort-mode) .item-row,.gc{pointer-events:auto;}
 'use strict';
 const KEY='rtb_v5';
 const S={
-  view:'home',sub:'routine',date:'',cat:'하루',
+  view:'home',sub:'routine',date:'',cat:'__all__',
   calY:0,calM:0,boards:{},weights:{},
   actTarget:null,wgtTarget:null,sortMode:false,
   cats:[
@@ -694,7 +694,9 @@ function load(){
   try{
     const p=JSON.parse(raw);
     S.date=p.date||t;S.boards=p.boards||{};S.weights=p.weights||{};
-    S.view=p.view||'home';S.sub=p.sub||'routine';S.cat=p.cat||'하루';
+    S.view=p.view||'home';S.sub=p.sub||'routine';
+    // 앱 실행 시에는 저장된 카테고리와 관계없이 전체 페이지를 먼저 보여줍니다.
+    S.cat='__all__';
     Object.values(S.boards).forEach(b=>{
       b.groups=b.groups||[];b.todos=b.todos||[];
       b.groups.forEach(g=>{if(!g.id)g.id=g();g.items=(g.items||[]).map(it=>({...it,hk:it.hk||g()}));});
